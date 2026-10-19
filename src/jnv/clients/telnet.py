@@ -3,6 +3,8 @@ import socket
 import time
 from typing import ClassVar
 
+from .. import config
+
 IAC: bytes = bytes([255])
 DONT: bytes = bytes([254])
 DO: bytes = bytes([253])
@@ -17,8 +19,8 @@ class TelnetClient:
         self,
         hostname: str,
         port: int = 23,
-        username: str = "GEPON",
-        password: str = "GEPON",
+        username: str = config.settings.olt_fiberhome_default_username,
+        password: str = config.settings.olt_fiberhome_default_password.get_secret_value(),
         timeout: float = DEFAULT_TIMEOUT,
     ) -> None:
         self.hostname: str = hostname

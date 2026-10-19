@@ -20,5 +20,12 @@ class Settings(BaseSettings):
     olt_default_username: str = Field(default="olt_default_username")
     olt_default_password: SecretStr = Field(default=SecretStr("olt_default_password"))
 
+    olt_fiberhome_default_username: str = Field(
+        default="olt_fiberhome_default_username"
+    )
+    olt_fiberhome_default_password: SecretStr = Field(
+        default=SecretStr("olt_fiberhome_default_password")
+    )
+
 
 settings = Settings()
