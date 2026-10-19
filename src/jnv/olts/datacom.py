@@ -111,8 +111,6 @@ class DatacomOLT:
         onu_num = self._onu_number(onu)
         onu_num = int(onu_num) - 1
         command = f'show alarm | include "gpon-1/1/{pon_num}/{onu_num} "'
-        with open("file.txt", "wt") as file:
-            file.write(command)
         return self._run_ssh(command, ssh_client=client)
 
     def run_pon_alarms(self, ssh_client: clients.SSHClient | None = None) -> list[str]:
