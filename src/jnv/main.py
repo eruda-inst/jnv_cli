@@ -88,20 +88,25 @@ def main(stdscr: curses.window) -> None:
 
         try:
             slots = OLTS[olt]
+            single_slot = len(slots) == 1
+
             while True:
-                idx = ui.select_menu(
-                    "Selecione o SLOT",
-                    slots,
-                    back=True,
-                    context=[f"OLT selecionada: {olt}"],
-                )
-                if idx is None:
-                    break
-                slot = slots[idx]
+                if single_slot:
+                    slot = slots[0]
+                else:
+                    idx = ui.select_menu(
+                        "Selecione o SLOT",
+                        slots,
+                        back=True,
+                        context=[f"OLT selecionada: {olt}"],
+                    )
+                    if idx is None:
+                        break
+                    slot = slots[idx]
 
                 ui.show_loading([f"OLT: {olt}", f"SLOT: {slot}", "Buscando PONs..."])
                 if isinstance(olt_device, FiberhomeOLT):
-                    available_pons = olt_device.get_pons(slot)
+                    available_pons = olt_device.get_pons(slot=slot)
                 else:
                     available_pons = olt_device.get_pons()
 
@@ -142,7 +147,7 @@ def main(stdscr: curses.window) -> None:
                         if letter == CMD_PON_ALARMS:
                             ui.show_loading(ctx_base)
                             if isinstance(olt_device, FiberhomeOLT):
-                                lines = olt_device.run_pon_alarms(slot, pon)
+                                lines = olt_device.run_pon_alarms(slot=slot, pon=pon)
                             else:
                                 lines = olt_device.run_pon_alarms()
                             ui.show_result(
@@ -189,6 +194,9 @@ def main(stdscr: curses.window) -> None:
                             continue
 
                         continue
+
+                if single_slot:
+                    break
         finally:
             if client is not None:
                 try:
