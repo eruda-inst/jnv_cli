@@ -42,10 +42,10 @@ class DatacomOLT:
     ) -> list[str]:
         client = ssh_client or self.ssh_client
         if not client:
-            return ["(sem saída)"]
+            return ["(Sem saída)"]
         client.execute_command(command)
         stdout = client.get_stdout()
-        return stdout.splitlines() or ["(sem saída)"]
+        return stdout.splitlines() or ["(Sem alarmes)"]
 
     def get_pons(self, ssh_client: clients.SSHClient | None = None) -> list[str]:
         client = ssh_client or self.ssh_client
@@ -105,7 +105,7 @@ class DatacomOLT:
     ) -> list[str]:
         client = ssh_client or self.ssh_client
         if client is None or not client.is_connected:
-            return ["(sem conexão SSH)"]
+            return ["(Sem conexão SSH)"]
 
         pon_num = self._pon_number(pon)
         onu_num = self._onu_number(onu)
@@ -117,4 +117,4 @@ class DatacomOLT:
         client = ssh_client or self.ssh_client
         if client is not None and client.is_connected:
             return self._run_ssh("show alarm", ssh_client=client)
-        return ["(sem conexão SSH)"]
+        return ["(Sem conexão SSH)"]

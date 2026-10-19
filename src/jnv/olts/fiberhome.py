@@ -88,7 +88,7 @@ class FiberhomeOLT:
     ) -> list[str]:
         client = telnet_client or self.telnet_client
         if not client or not client.is_connected:
-            return ["(sem conexão Telnet)"]
+            return ["(Sem conexão Telnet)"]
 
         cleanup = cleanup_commands or ["cd /"]
         all_cmds = commands + cleanup
@@ -113,7 +113,7 @@ class FiberhomeOLT:
         while output_lines and not output_lines[-1].strip():
             output_lines.pop()
 
-        return output_lines or ["(sem saída ou sem alarmes registrados)"]
+        return output_lines or ["(Sem saída ou sem alarmes registrados)"]
 
     def get_pons(
         self,
@@ -190,7 +190,7 @@ class FiberhomeOLT:
     ) -> list[str]:
         client = telnet_client or self.telnet_client
         if not client or not client.is_connected:
-            return ["(sem conexão Telnet)"]
+            return ["(Sem conexão Telnet)"]
 
         slot_num = self._slot_number(slot)
         pon_num = self._pon_number(pon)
@@ -206,7 +206,7 @@ class FiberhomeOLT:
     ) -> list[str]:
         client = telnet_client or self.telnet_client
         if not client or not client.is_connected:
-            return ["(sem conexão Telnet)"]
+            return ["(Sem conexão Telnet)"]
 
         slot_num = self._slot_number(slot)
         pon_num = self._pon_number(pon)
