@@ -15,6 +15,16 @@ class DatacomOLT:
     def __init__(self, ssh_client: clients.SSHClient | None = None) -> None:
         self.ssh_client = ssh_client
 
+    @staticmethod
+    def _onu_number(onu: int | str) -> str:
+        if isinstance(onu, str):
+            raw = onu.rsplit(" ", 1)[-1]
+            try:
+                return str(int(raw))
+            except ValueError:
+                return raw
+        return str(onu)
+
     @classmethod
     def is_ssh_olt(cls, olt: str) -> bool:
         return olt not in cls.NON_SSH_OLTS
@@ -86,11 +96,24 @@ class DatacomOLT:
 
         return onus
 
-    def run_onu_alarms(self, ssh_client: clients.SSHClient | None = None) -> list[str]:
+    def run_onu_alarms(
+        self,
+        slot: str = "SLOT 001",
+        pon: str = "PON 001",
+        onu: int | str = 1,
+        ssh_client: clients.SSHClient | None = None,
+    ) -> list[str]:
         client = ssh_client or self.ssh_client
-        if client is not None and client.is_connected:
-            return self._run_ssh("show alarm", ssh_client=client)
-        return ["(sem conexão SSH)"]
+        if client is None or not client.is_connected:
+            return ["(sem conexão SSH)"]
+
+        pon_num = self._pon_number(pon)
+        onu_num = self._onu_number(onu)
+        onu_num = int(onu_num) - 1
+        command = f'show alarm | include "gpon-1/1/{pon_num}/{onu_num} "'
+        with open("file.txt", "wt") as file:
+            file.write(command)
+        return self._run_ssh(command, ssh_client=client)
 
     def run_pon_alarms(self, ssh_client: clients.SSHClient | None = None) -> list[str]:
         client = ssh_client or self.ssh_client

@@ -178,12 +178,9 @@ def main(stdscr: curses.window) -> None:
 
                             onu = onus[idx_onu]
                             ui.show_loading(ctx_base + [f"ONU: {onu['label']}"])
-                            if isinstance(olt_device, FiberhomeOLT):
-                                lines = olt_device.run_onu_alarms(
-                                    slot=slot, pon=pon, onu=onu["id"]
-                                )
-                            else:
-                                lines = olt_device.run_onu_alarms()
+                            lines = olt_device.run_onu_alarms(
+                                slot=slot, pon=pon, onu=onu["id"]
+                            )
                             ui.show_result(
                                 f"{description} — {olt} / {slot} / {pon} "
                                 f"/ {onu['label']}",
