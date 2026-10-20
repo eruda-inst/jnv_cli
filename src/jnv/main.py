@@ -37,6 +37,25 @@ def _open_connection_for(
     return None, None, False
 
 
+def _onu_label(olt_device: DatacomOLT | FiberhomeOLT, onu: dict) -> str:
+    """Formata o rótulo da ONU conforme o tipo de OLT."""
+    if isinstance(olt_device, FiberhomeOLT):
+        return f"{onu['label']} — {onu['status']}"
+    return (
+        f"{onu['label']} — {onu['serial_number']} — "
+        f"{onu['onu_state']} — {onu['onu_name']}"
+    )
+
+
+def _run_onu_alarms(
+    olt_device: DatacomOLT | FiberhomeOLT, slot: str, pon: str, onu: dict
+) -> list[str]:
+    """Executa o comando de alarmes de ONU respeitando a assinatura de cada OLT."""
+    if isinstance(olt_device, FiberhomeOLT):
+        return olt_device.run_onu_alarms(slot=slot, pon=pon, onu=onu["id"])
+    return olt_device.run_onu_alarms(pon=pon, onu=onu["id"])
+
+
 def main(stdscr: curses.window) -> None:
     curses.curs_set(0)
     stdscr.keypad(True)
@@ -117,7 +136,7 @@ def main(stdscr: curses.window) -> None:
                         if letter == CMD_PON_ALARMS:
                             ui.show_loading(ctx_base)
                             if isinstance(olt_device, FiberhomeOLT):
-                                lines = olt_device.run_pon_alarms(slot=slot, pon=pon)  # type: ignore
+                                lines = olt_device.run_pon_alarms(slot=slot, pon=pon)
                             else:
                                 lines = olt_device.run_pon_alarms(pon_number=pon)
                             ui.show_result(
@@ -136,7 +155,8 @@ def main(stdscr: curses.window) -> None:
                                 )
                                 continue
 
-                            labels = [o["label"] for o in onus]
+                            labels = [_onu_label(olt_device, o) for o in onus]
+
                             idx_onu = ui.select_menu(
                                 "Selecione a ONU",
                                 labels,
@@ -153,7 +173,7 @@ def main(stdscr: curses.window) -> None:
 
                             onu = onus[idx_onu]
                             ui.show_loading(ctx_base + [f"ONU: {onu['label']}"])
-                            lines = olt_device.run_onu_alarms(pon=pon, onu=onu["id"])
+                            lines = _run_onu_alarms(olt_device, slot, pon, onu)
                             ui.show_result(
                                 f"{description} — {olt} / {slot} / {pon} "
                                 f"/ {onu['label']}",

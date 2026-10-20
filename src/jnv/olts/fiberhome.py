@@ -104,7 +104,7 @@ class FiberhomeOLT:
 
     def get_onus(
         self, slot: str = "SLOT 001", pon: str = "PON 001"
-    ) -> list[constants.ONU]:
+    ) -> list[constants.ONU_FIBERHOME]:
         if not self.telnet_client or not self.telnet_client.is_connected:
             return []
 
@@ -113,21 +113,19 @@ class FiberhomeOLT:
         cmds = ["cd /", "cd onu", f"show onu_state slot {slot_num} pon {pon_num}"]
         lines = self._run_telnet_commands(commands=cmds)
 
-        onus: list[constants.ONU] = []
+        onus: list[constants.ONU_FIBERHOME] = []
         for line in lines:
             onu_id = int(line.split()[5])
-            onus.append(constants.ONU(id=onu_id, label=f"ONU {onu_id:03d}"))
+            onu_status = line.split()[8]
+            onu_status = onu_status.removesuffix(".")
 
-        if not onus:
-            data_lines = [
-                l
-                for l in lines
-                if l.strip()
-                and not l.strip().startswith("cd")
-                and not l.strip().startswith("show")
-            ]
-            for i in range(len(data_lines)):
-                onus.append(constants.ONU(id=i + 1, label=f"ONU {i + 1:03d}"))
+            onus.append(
+                constants.ONU_FIBERHOME(
+                    id=onu_id,
+                    label=f"ONU {onu_id:03d}",
+                    status=onu_status,
+                )
+            )
 
         return onus
 

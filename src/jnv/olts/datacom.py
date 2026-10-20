@@ -44,7 +44,7 @@ class DatacomOLT:
         stdout = self.ssh_client.get_stdout()
         return stdout.splitlines() or ["(Sem alarmes)"]
 
-    def get_onus(self, slot: str, pon: str) -> list[constants.ONU]:
+    def get_onus(self, slot: str, pon: str) -> list[constants.ONU_DATACOM]:
         if not self.ssh_client:
             return []
 
@@ -52,11 +52,28 @@ class DatacomOLT:
         lines = self._run_ssh(command=command)
         lines = lines[2:]
 
-        onus: list[constants.ONU] = []
+        onus: list[constants.ONU_DATACOM] = []
 
         for line in lines:
             onu_id = int(line.split()[1])
-            onus.append(constants.ONU(id=onu_id + 1, label=f"ONU {onu_id:03d}"))
+            onu_serial_number = line.split()[2]
+            onu_state = line.split()[3]
+            onu_state = "Up  " if onu_state == "Up" else onu_state
+
+            onu_name = "---"
+
+            if len(line.split()) == 6:
+                onu_name = line.split()[5]
+
+            onus.append(
+                constants.ONU_DATACOM(
+                    id=onu_id + 1,
+                    label=f"ONU {onu_id:03d}",
+                    serial_number=onu_serial_number,
+                    onu_state=onu_state,
+                    onu_name=onu_name,
+                )
+            )
 
         return onus
 

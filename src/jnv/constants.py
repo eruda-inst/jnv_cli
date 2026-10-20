@@ -1,6 +1,6 @@
 from typing import TypedDict
 
-TITLE: str = "JNV - Jacobina Network Viewer v1.1.2"
+TITLE: str = "JNV - Jacobina Network Viewer v1.1.6"
 
 CMD_ONU_ALARMS: str = "O"
 CMD_PON_ALARMS: str = "P"
@@ -11,7 +11,12 @@ COMMANDS: list[tuple[str, str]] = [
 ]
 
 
-ONU = TypedDict("ONU", {"id": int, "label": str})
+ONU_DATACOM = TypedDict(
+    "ONU_DATACOM",
+    {"id": int, "label": str, "serial_number": str, "onu_state": str, "onu_name": str},
+)
+
+ONU_FIBERHOME = TypedDict("ONU_FIBERHOME", {"id": int, "label": str, "status": str})
 
 
 OLTS: dict[str, list[str]] = {
