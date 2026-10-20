@@ -13,27 +13,25 @@ class SSHClient:
         self.hostname = hostname
         self.username = username
         self.password = password
-        self.is_connected = False
+
         self.client = paramiko.SSHClient()
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-    def connect(self) -> None:
-        self.client.connect(
-            hostname=self.hostname,
-            username=self.username,
-            password=self.password,
-            look_for_keys=False,
-            allow_agent=False,
-        )
-        self.is_connected = True
+        try:
+            self.client.connect(
+                hostname=self.hostname,
+                username=self.username,
+                password=self.password,
+                look_for_keys=False,
+                allow_agent=False,
+            )
+        except paramiko.SSHException:
+            raise paramiko.SSHException()
 
     def close(self) -> None:
         self.client.close()
-        self.is_connected = False
 
     def execute_command(self, command: str, timeout: float = 30.0) -> None:
-        if not self.is_connected:
-            return
         self.stdin, self.stdout, self.stderr = self.client.exec_command(command)
         self.stdout.channel.settimeout(timeout)
 

@@ -12,7 +12,7 @@ class FiberhomeOLT:
         "OLT NEWNET": config.settings.olt_newnet_hostname,
     }
 
-    def __init__(self, telnet_client: clients.TelnetClient | None = None) -> None:
+    def __init__(self, telnet_client: clients.TelnetClient) -> None:
         self.telnet_client = telnet_client
 
     @classmethod
@@ -61,33 +61,23 @@ class FiberhomeOLT:
         if re.match(r"^[A-Za-z0-9_\\/.\-]+[#>]$", s):
             return True
 
-        if any(
-            err in s
-            for err in (
-                "% Unknown command",
-                "Press any key to continue",
-                "Ctrl+c to stop",
-                "can not find the dir",
-                "Command executes failed",
-                'You can input "dir"',
-                "to go to father dir",
-                "Connected to",
-                "force exit telnet",
-                "Press Ctrl-Q or Ctrl-Y",
-            )
-        ):
-            return True
-
-        return False
+        return (
+            "% Unknown command" in s
+            or "Press any key to continue" in s
+            or "Ctrl+c to stop" in s
+            or "can not find the dir" in s
+            or "Command executes failed" in s
+            or 'You can input "dir"' in s
+            or "to go to father dir" in s
+            or "Connected to" in s
+            or "force exit telnet" in s
+            or "Press Ctrl-Q or Ctrl-Y" in s
+        )
 
     def _run_telnet_commands(
-        self,
-        commands: list[str],
-        telnet_client: clients.TelnetClient | None = None,
-        cleanup_commands: list[str] | None = None,
+        self, commands: list[str], cleanup_commands: list[str] | None = None
     ) -> list[str]:
-        client = telnet_client or self.telnet_client
-        if not client or not client.is_connected:
+        if not self.telnet_client or not self.telnet_client.is_connected:
             return ["(Sem conexão Telnet)"]
 
         cleanup = cleanup_commands or ["cd /"]
@@ -96,17 +86,14 @@ class FiberhomeOLT:
 
         try:
             for cmd in commands:
-                res = client.send_command(cmd)
+                res = self.telnet_client.send_command(cmd)
                 if res.strip():
                     for line in res.splitlines():
                         if not self._is_prompt_or_echo(line, all_cmds):
                             output_lines.append(line)
         finally:
             for clean_cmd in cleanup:
-                try:
-                    client.send_command(clean_cmd)
-                except Exception:
-                    pass
+                self.telnet_client.send_command(clean_cmd)
 
         while output_lines and not output_lines[0].strip():
             output_lines.pop(0)
@@ -115,47 +102,16 @@ class FiberhomeOLT:
 
         return output_lines or ["(Sem saída ou sem alarmes registrados)"]
 
-    def get_pons(
-        self,
-        slot: str = "SLOT 001",
-        telnet_client: clients.TelnetClient | None = None,
-    ) -> list[str]:
-        client = telnet_client or self.telnet_client
-        if not client or not client.is_connected:
-            return [f"PON {i:03d}" for i in range(1, 16 + 1)]
-
-        slot_num = self._slot_number(slot)
-        cmds = ["cd /", "cd card", f"show pon_onoff {slot_num}"]
-        lines = self._run_telnet_commands(cmds, telnet_client=client)
-
-        pons: list[str] = []
-        for line in lines:
-            match = re.search(r"PON\s*(\d+)", line, re.IGNORECASE)
-            if match:
-                pon_num = int(match.group(1))
-                pon_str = f"PON {pon_num:03d}"
-                if pon_str not in pons:
-                    pons.append(pon_str)
-
-        if not pons:
-            pons = [f"PON {i:03d}" for i in range(1, 16 + 1)]
-
-        return pons
-
     def get_onus(
-        self,
-        slot: str = "SLOT 001",
-        pon: str = "PON 001",
-        telnet_client: clients.TelnetClient | None = None,
+        self, slot: str = "SLOT 001", pon: str = "PON 001"
     ) -> list[constants.ONU]:
-        client = telnet_client or self.telnet_client
-        if not client or not client.is_connected:
+        if not self.telnet_client or not self.telnet_client.is_connected:
             return []
 
         slot_num = self._slot_number(slot)
         pon_num = self._pon_number(pon)
         cmds = ["cd /", "cd onu", f"show onu_state slot {slot_num} pon {pon_num}"]
-        lines = self._run_telnet_commands(cmds, telnet_client=client)
+        lines = self._run_telnet_commands(commands=cmds)
 
         onus: list[constants.ONU] = []
         for line in lines:
@@ -182,37 +138,30 @@ class FiberhomeOLT:
 
     get_onu = get_onus
 
-    def run_pon_alarms(
-        self,
-        slot: str = "SLOT 001",
-        pon: str = "PON 001",
-        telnet_client: clients.TelnetClient | None = None,
-    ) -> list[str]:
-        client = telnet_client or self.telnet_client
-        if not client or not client.is_connected:
+    def run_pon_alarms(self, slot: str = "SLOT 001", pon: str = "PON 001") -> list[str]:
+        if not self.telnet_client or not self.telnet_client.is_connected:
             return ["(Sem conexão Telnet)"]
 
-        slot_num = self._slot_number(slot)
-        pon_num = self._pon_number(pon)
-        cmds = ["cd /", "cd onu", f"show onu_state slot {slot_num} pon {pon_num}"]
-        return self._run_telnet_commands(cmds, telnet_client=client)
+        slot_number = self._slot_number(slot)
+        pon_number = self._pon_number(pon)
+        commands = [
+            "cd /",
+            "cd onu",
+            f"show onu_state slot {slot_number} pon {pon_number}",
+        ]
+        return self._run_telnet_commands(commands=commands)
 
     def run_onu_alarms(
-        self,
-        slot: str = "SLOT 001",
-        pon: str = "PON 001",
-        onu: int | str = 1,
-        telnet_client: clients.TelnetClient | None = None,
+        self, slot: str = "SLOT 001", pon: str = "PON 001", onu: int | str = 1
     ) -> list[str]:
-        client = telnet_client or self.telnet_client
-        if not client or not client.is_connected:
+        if not self.telnet_client or not self.telnet_client.is_connected:
             return ["(Sem conexão Telnet)"]
 
         slot_num = self._slot_number(slot)
         pon_num = self._pon_number(pon)
         onu_num = self._onu_number(onu)
 
-        cmds = [
+        commands = [
             "cd /",
             "cd maintenance",
             "cd alarm",
@@ -221,6 +170,4 @@ class FiberhomeOLT:
 
         cleanup = ["cd /"]
 
-        return self._run_telnet_commands(
-            cmds, telnet_client=client, cleanup_commands=cleanup
-        )
+        return self._run_telnet_commands(commands=commands, cleanup_commands=cleanup)

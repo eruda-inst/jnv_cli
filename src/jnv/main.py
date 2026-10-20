@@ -2,7 +2,13 @@ import curses
 
 from .clients.ssh import SSHClient
 from .clients.telnet import TelnetClient
-from .constants import CMD_ONU_ALARMS, CMD_PON_ALARMS, COMMANDS, OLTS
+from .constants import (
+    CMD_ONU_ALARMS,
+    CMD_PON_ALARMS,
+    COMMANDS,
+    OLT_PONS,
+    OLTS,
+)
 from .olts.datacom import DatacomOLT
 from .olts.fiberhome import FiberhomeOLT
 from .ui import UI
@@ -14,47 +20,14 @@ def _open_connection_for(
     if DatacomOLT.is_ssh_olt(olt):
         hostname = DatacomOLT.OLT_SSH_HOSTNAMES[olt]
         client = SSHClient(hostname=hostname)
-
         ui.show_loading([f"OLT: {olt}", f"Conectando via SSH a {hostname}..."])
-        try:
-            client.connect()
-        except Exception as exc:
-            try:
-                client.close()
-            except Exception:
-                pass
-            ui.show_result(
-                f"Falha ao conectar em {olt}",
-                [
-                    "Não foi possível estabelecer a conexão SSH:",
-                    "",
-                    str(exc),
-                ],
-            )
-            return None, None, False
         return client, DatacomOLT(ssh_client=client), True
 
     if FiberhomeOLT.is_telnet_olt(olt):
         hostname = FiberhomeOLT.OLT_TELNET_HOSTNAMES[olt]
         client = TelnetClient(hostname=hostname)
-
         ui.show_loading([f"OLT: {olt}", f"Conectando via Telnet a {hostname}..."])
-        try:
-            client.connect()
-        except Exception as exc:
-            try:
-                client.close()
-            except Exception:
-                pass
-            ui.show_result(
-                f"Falha ao conectar em {olt}",
-                [
-                    "Não foi possível estabelecer a conexão Telnet:",
-                    "",
-                    str(exc),
-                ],
-            )
-            return None, None, False
+        client.connect()
         return client, FiberhomeOLT(telnet_client=client), True
 
     ui.show_result(
@@ -105,10 +78,7 @@ def main(stdscr: curses.window) -> None:
                     slot = slots[idx]
 
                 ui.show_loading([f"OLT: {olt}", f"SLOT: {slot}", "Buscando PONs..."])
-                if isinstance(olt_device, FiberhomeOLT):
-                    available_pons = olt_device.get_pons(slot=slot)
-                else:
-                    available_pons = olt_device.get_pons()
+                available_pons = OLT_PONS[olt]
 
                 while True:
                     idx = ui.select_menu(
@@ -147,9 +117,9 @@ def main(stdscr: curses.window) -> None:
                         if letter == CMD_PON_ALARMS:
                             ui.show_loading(ctx_base)
                             if isinstance(olt_device, FiberhomeOLT):
-                                lines = olt_device.run_pon_alarms(slot=slot, pon=pon)
+                                lines = olt_device.run_pon_alarms(slot=slot, pon=pon)  # type: ignore
                             else:
-                                lines = olt_device.run_pon_alarms()
+                                lines = olt_device.run_pon_alarms(pon_number=pon)
                             ui.show_result(
                                 f"{description} — {olt} / {slot} / {pon}",
                                 lines,
@@ -183,9 +153,7 @@ def main(stdscr: curses.window) -> None:
 
                             onu = onus[idx_onu]
                             ui.show_loading(ctx_base + [f"ONU: {onu['label']}"])
-                            lines = olt_device.run_onu_alarms(
-                                slot=slot, pon=pon, onu=onu["id"]
-                            )
+                            lines = olt_device.run_onu_alarms(pon=pon, onu=onu["id"])
                             ui.show_result(
                                 f"{description} — {olt} / {slot} / {pon} "
                                 f"/ {onu['label']}",
@@ -199,15 +167,14 @@ def main(stdscr: curses.window) -> None:
                     break
         finally:
             if client is not None:
-                try:
-                    client.close()
-                except Exception:
-                    pass
+                client.close()
 
 
 def run() -> None:
-    curses.wrapper(main)
-    print("Programa encerrado.")
+    try:
+        curses.wrapper(main)
+    except KeyboardInterrupt:
+        print("Programa encerrado.")
 
 
 if __name__ == "__main__":
