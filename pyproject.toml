@@ -1,7 +1,7 @@
 [project]
 name = "jnv"
 version = "1.0.0"
-description = "It does stuff."
+description = "Curses-based terminal UI for browsing OLT slots and PONs and inspecting ONU/PON alarms on Datacom (SSH) and Fiberhome (Telnet) OLTs.s"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
