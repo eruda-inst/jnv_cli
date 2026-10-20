@@ -78,7 +78,7 @@ def main(stdscr: curses.window) -> None:
                     slot = slots[idx]
 
                 ui.show_loading([f"OLT: {olt}", f"SLOT: {slot}", "Buscando PONs..."])
-                available_pons = OLT_PONS[olt]
+                available_pons = OLT_PONS[olt][slot]
 
                 while True:
                     idx = ui.select_menu(

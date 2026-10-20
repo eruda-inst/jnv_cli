@@ -1,6 +1,6 @@
 from typing import TypedDict
 
-TITLE: str = "JNV - Jacobina Network Viewer v1.0.8"
+TITLE: str = "JNV - Jacobina Network Viewer v1.1.0"
 
 CMD_ONU_ALARMS: str = "O"
 CMD_PON_ALARMS: str = "P"
@@ -25,12 +25,19 @@ OLTS: dict[str, list[str]] = {
 }
 
 
-OLT_PONS: dict[str, list[str]] = {
-    "OLT ACIJA": [f"PON {i:03d}" for i in range(1, 16 + 1)],
-    "OLT ITAITU": [f"PON {i:03d}" for i in range(1, 8 + 1)],
-    "OLT JAC 3": [f"PON {i:03d}" for i in range(1, 8 + 1)],
-    "OLT LAJES": [f"PON {i:03d}" for i in range(1, 8 + 1)],
-    "OLT NEWNET": [f"PON {i:03d}" for i in range(1, 16 + 1)],
-    "OLT PALMEIRINHA": [f"PON {i:03d}" for i in range(1, 8 + 1)],
-    "OLT PARAÍSO": [f"PON {i:03d}" for i in range(1, 8 + 1)],
+def _pons(count: int) -> list[str]:
+    return [f"PON {i:03d}" for i in range(1, count + 1)]
+
+
+OLT_PONS: dict[str, dict[str, list[str]]] = {
+    "OLT ACIJA": {slot: _pons(16) for slot in OLTS["OLT ACIJA"]},
+    "OLT ITAITU": {slot: _pons(8) for slot in OLTS["OLT ITAITU"]},
+    "OLT JAC 3": {slot: _pons(16) for slot in OLTS["OLT JAC 3"]},
+    "OLT LAJES": {slot: _pons(16) for slot in OLTS["OLT LAJES"]},
+    "OLT NEWNET": {
+        **{slot: _pons(8) for slot in OLTS["OLT NEWNET"][:3]},
+        **{slot: _pons(16) for slot in OLTS["OLT NEWNET"][3:]},
+    },
+    "OLT PALMEIRINHA": {slot: _pons(8) for slot in OLTS["OLT PALMEIRINHA"]},
+    "OLT PARAÍSO": {slot: _pons(16) for slot in OLTS["OLT PARAÍSO"]},
 }
