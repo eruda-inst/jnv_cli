@@ -54,12 +54,9 @@ class DatacomOLT:
 
         onus: list[constants.ONU] = []
 
-        if len(lines):
-            first = int(lines[0].split()[1])
-            last = int(lines[-1].split()[1])
-
-            for i in range(first, last + 1):
-                onus.append(constants.ONU(id=i + 1, label=f"ONU {i:03d}"))
+        for line in lines:
+            onu_id = int(line.split()[1])
+            onus.append(constants.ONU(id=onu_id + 1, label=f"ONU {onu_id:03d}"))
 
         return onus
 

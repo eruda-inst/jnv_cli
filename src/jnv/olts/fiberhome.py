@@ -115,13 +115,8 @@ class FiberhomeOLT:
 
         onus: list[constants.ONU] = []
         for line in lines:
-            parts = line.strip().split()
-            if parts and parts[0].isdigit():
-                try:
-                    onu_id = int(parts[0])
-                    onus.append(constants.ONU(id=onu_id, label=f"ONU {onu_id:03d}"))
-                except ValueError:
-                    pass
+            onu_id = int(line.split()[5])
+            onus.append(constants.ONU(id=onu_id, label=f"ONU {onu_id:03d}"))
 
         if not onus:
             data_lines = [
