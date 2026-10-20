@@ -51,10 +51,15 @@ class DatacomOLT:
         command = f"show interface gpon 1/{self._slot_number(slot)}/{self._pon_number(pon)} onu"
         lines = self._run_ssh(command=command)
         lines = lines[2:]
+
         onus: list[constants.ONU] = []
 
-        for i in range(len(lines)):
-            onus.append(constants.ONU(id=i + 1, label=f"ONU {i:03d}"))
+        if len(lines):
+            first = int(lines[0].split()[1])
+            last = int(lines[-1].split()[1])
+
+            for i in range(first, last + 1):
+                onus.append(constants.ONU(id=i + 1, label=f"ONU {i:03d}"))
 
         return onus
 
