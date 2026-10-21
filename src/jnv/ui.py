@@ -32,10 +32,12 @@ class UI:
         back: bool = False,
         context: Sequence[str] | None = None,
         can_exit: bool = True,
+        default: int = 0,
     ) -> int | None:
-        selected = 0
+        selected = max(0, min(default, len(options) - 1))
         top = 0
         hints = ["↑/↓ navegar", "Enter selecionar"]
+
         if back:
             hints.append("q voltar")
         elif can_exit:
