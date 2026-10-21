@@ -180,30 +180,33 @@ def main(stdscr: curses.window) -> None:
 
                             labels = [_onu_label(olt_device, o) for o in onus]
 
-                            idx_onu = ui.select_menu(
-                                "Selecione a ONU",
-                                labels,
-                                back=True,
-                                context=[
-                                    f"OLT: {olt}",
-                                    f"SLOT: {slot}",
-                                    f"PON: {pon}",
-                                    f"Comando: {description}",
-                                ],
-                                default=last_onu_idx,
-                            )
-                            if idx_onu is None:
-                                continue
-                            last_onu_idx = idx_onu
+                            while True:
+                                idx_onu = ui.select_menu(
+                                    "Selecione a ONU",
+                                    labels,
+                                    back=True,
+                                    context=[
+                                        f"OLT: {olt}",
+                                        f"SLOT: {slot}",
+                                        f"PON: {pon}",
+                                        f"Comando: {description}",
+                                    ],
+                                    default=last_onu_idx,
+                                )
+                                if idx_onu is None:
+                                    break
 
-                            onu = onus[idx_onu]
-                            ui.show_loading(ctx_base + [f"ONU: {onu['label']}"])
-                            lines = _run_onu_alarms(olt_device, slot, pon, onu)
-                            ui.show_result(
-                                f"{description} — {olt} / {slot} / {pon} "
-                                f"/ {onu['label']}",
-                                lines,
-                            )
+                                last_onu_idx = idx_onu
+
+                                onu = onus[idx_onu]
+                                ui.show_loading(ctx_base + [f"ONU: {onu['label']}"])
+                                lines = _run_onu_alarms(olt_device, slot, pon, onu)
+                                ui.show_result(
+                                    f"{description} — {olt} / {slot} / {pon} "
+                                    f"/ {onu['label']}",
+                                    lines,
+                                )
+
                             continue
 
                         continue
