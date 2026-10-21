@@ -64,14 +64,26 @@ def main(stdscr: curses.window) -> None:
     olts = list(OLTS.keys())
     command_labels = [f"{letter} - {description}" for letter, description in COMMANDS]
 
+    last_olt_idx = 0
+    last_slot_idx = 0
+    last_pon_idx = 0
+    last_cmd_idx = 0
+    last_onu_idx = 0
+
     while True:
         idx = ui.select_menu(
             "Selecione a OLT que você deseja acessar",
             olts,
             can_exit=False,
+            default=last_olt_idx,
         )
         if idx is None:
             continue
+        if idx != last_olt_idx:
+            last_slot_idx = 0
+            last_pon_idx = 0
+            last_onu_idx = 0
+        last_olt_idx = idx
         olt = olts[idx]
 
         client, olt_device, ok = _open_connection_for(ui, olt)
@@ -91,9 +103,14 @@ def main(stdscr: curses.window) -> None:
                         slots,
                         back=True,
                         context=[f"OLT selecionada: {olt}"],
+                        default=last_slot_idx,
                     )
                     if idx is None:
                         break
+                    if idx != last_slot_idx:
+                        last_pon_idx = 0
+                        last_onu_idx = 0
+                    last_slot_idx = idx
                     slot = slots[idx]
 
                 ui.show_loading([f"OLT: {olt}", f"SLOT: {slot}", "Buscando PONs..."])
@@ -105,9 +122,13 @@ def main(stdscr: curses.window) -> None:
                         available_pons,
                         back=True,
                         context=[f"OLT: {olt}", f"SLOT: {slot}"],
+                        default=last_pon_idx,
                     )
                     if idx is None:
                         break
+                    if idx != last_pon_idx:
+                        last_onu_idx = 0
+                    last_pon_idx = idx
                     pon = available_pons[idx]
 
                     while True:
@@ -120,9 +141,11 @@ def main(stdscr: curses.window) -> None:
                                 f"SLOT: {slot}",
                                 f"PON: {pon}",
                             ],
+                            default=last_cmd_idx,
                         )
                         if idx is None:
                             break
+                        last_cmd_idx = idx
 
                         letter, description = COMMANDS[idx]
 
@@ -167,9 +190,11 @@ def main(stdscr: curses.window) -> None:
                                     f"PON: {pon}",
                                     f"Comando: {description}",
                                 ],
+                                default=last_onu_idx,
                             )
                             if idx_onu is None:
                                 continue
+                            last_onu_idx = idx_onu
 
                             onu = onus[idx_onu]
                             ui.show_loading(ctx_base + [f"ONU: {onu['label']}"])
