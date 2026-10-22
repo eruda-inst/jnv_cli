@@ -16,6 +16,8 @@ wget -qO- https://astral.sh/uv/install.sh | sh
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
+After that, restart your terminal/console (close and reopen it).
+
 - On Windows
 
 ```sh
