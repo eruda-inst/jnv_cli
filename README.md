@@ -19,7 +19,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 - On Windows
 
 ```sh
-# This works for both CMD and PowerShell
+# This is supposed to work for both CMD and PowerShell
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
