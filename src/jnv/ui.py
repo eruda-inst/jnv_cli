@@ -1,7 +1,7 @@
 import curses
 from collections.abc import Sequence
 
-from .constants import TITLE
+from .constants import CREDITS, TITLE
 
 
 def _clean_str(text: str) -> str:
@@ -16,12 +16,13 @@ class UI:
         _, w = self.stdscr.getmaxyx()
         self.stdscr.erase()
         self.stdscr.addstr(1, max(0, (w - len(TITLE)) // 2), TITLE)
+        self.stdscr.addstr(2, max(0, (w - len(CREDITS)) // 2), CREDITS, curses.A_DIM)
 
         if context:
             for i, line in enumerate(context):
-                self.stdscr.addstr(2 + i, 2, _clean_str(line), curses.A_DIM)
+                self.stdscr.addstr(3 + i, 2, _clean_str(line), curses.A_DIM)
 
-        y = 3 + (len(context) if context else 0) + 1
+        y = 4 + (len(context) if context else 0) + 1
         self.stdscr.addstr(y, 2, "Carregando...", curses.A_BOLD)
         self.stdscr.refresh()
 
@@ -49,12 +50,15 @@ class UI:
             self.stdscr.erase()
 
             self.stdscr.addstr(1, max(0, (w - len(TITLE)) // 2), TITLE)
+            self.stdscr.addstr(
+                2, max(0, (w - len(CREDITS)) // 2), CREDITS, curses.A_DIM
+            )
 
             if context:
                 for i, line in enumerate(context):
-                    self.stdscr.addstr(2 + i, 2, _clean_str(line), curses.A_DIM)
+                    self.stdscr.addstr(3 + i, 2, _clean_str(line), curses.A_DIM)
 
-            y_question = 3 + (len(context) if context else 0)
+            y_question = 4 + (len(context) if context else 0)
             self.stdscr.addstr(y_question, 2, _clean_str(question))
             self.stdscr.addstr(y_question + 1, 2, instructions)
 
@@ -97,6 +101,9 @@ class UI:
             self.stdscr.erase()
 
             self.stdscr.addstr(1, max(0, (w - len(TITLE)) // 2), TITLE)
+            self.stdscr.addstr(
+                2, max(0, (w - len(CREDITS)) // 2), CREDITS, curses.A_DIM
+            )
             self.stdscr.addstr(3, 2, _clean_str(title)[: max(0, w - 4)])
 
             y_base = 5

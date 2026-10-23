@@ -1,6 +1,7 @@
 from typing import TypedDict
 
-TITLE: str = "JNV - Jacobina Network Viewer v1.2.1"
+TITLE: str = "JNV - Jacobina Network Viewer v1.2.2"
+CREDITS: str = "Desenvolvido pela equipe de inovação da Newnet"
 
 CMD_ONU_ALARMS: str = "O"
 CMD_PON_ALARMS: str = "P"
