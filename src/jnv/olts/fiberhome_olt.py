@@ -1,18 +1,20 @@
 import re
 from typing import ClassVar
 
-from .. import clients, config, constants
+from .. import constants
+from ..clients.telnet_client import TelnetClient
+from ..config import settings
 
 
 class FiberhomeOLT:
     TELNET_OLTS: ClassVar[frozenset[str]] = frozenset({"OLT ACIJA", "OLT NEWNET"})
 
     OLT_TELNET_HOSTNAMES: ClassVar[dict[str, str]] = {
-        "OLT ACIJA": config.settings.olt_acija_hostname,
-        "OLT NEWNET": config.settings.olt_newnet_hostname,
+        "OLT ACIJA": settings.olt_acija_hostname,
+        "OLT NEWNET": settings.olt_newnet_hostname,
     }
 
-    def __init__(self, telnet_client: clients.TelnetClient) -> None:
+    def __init__(self, telnet_client: TelnetClient) -> None:
         self.telnet_client = telnet_client
 
     @classmethod
@@ -77,19 +79,16 @@ class FiberhomeOLT:
     def _run_telnet_commands(
         self, commands: list[str], cleanup_commands: list[str] | None = None
     ) -> list[str]:
-        if not self.telnet_client or not self.telnet_client.is_connected:
-            return ["(Sem conexão Telnet)"]
-
         cleanup = cleanup_commands or ["cd /"]
-        all_cmds = commands + cleanup
+        all_commands = commands + cleanup
         output_lines: list[str] = []
 
         try:
-            for cmd in commands:
-                res = self.telnet_client.send_command(cmd)
+            for command in commands:
+                res = self.telnet_client.send_command(command)
                 if res.strip():
                     for line in res.splitlines():
-                        if not self._is_prompt_or_echo(line, all_cmds):
+                        if not self._is_prompt_or_echo(line, all_commands):
                             output_lines.append(line)
         finally:
             for clean_cmd in cleanup:
@@ -105,9 +104,6 @@ class FiberhomeOLT:
     def get_onus(
         self, slot: str = "SLOT 001", pon: str = "PON 001"
     ) -> list[constants.ONU_FIBERHOME]:
-        if not self.telnet_client or not self.telnet_client.is_connected:
-            return []
-
         slot_num = self._slot_number(slot)
         pon_num = self._pon_number(pon)
         cmds = ["cd /", "cd onu", f"show onu_state slot {slot_num} pon {pon_num}"]
@@ -132,9 +128,6 @@ class FiberhomeOLT:
     get_onu = get_onus
 
     def run_pon_alarms(self, slot: str = "SLOT 001", pon: str = "PON 001") -> list[str]:
-        if not self.telnet_client or not self.telnet_client.is_connected:
-            return ["(Sem conexão Telnet)"]
-
         slot_number = self._slot_number(slot)
         pon_number = self._pon_number(pon)
         commands = [
@@ -147,9 +140,6 @@ class FiberhomeOLT:
     def run_onu_alarms(
         self, slot: str = "SLOT 001", pon: str = "PON 001", onu: int | str = 1
     ) -> list[str]:
-        if not self.telnet_client or not self.telnet_client.is_connected:
-            return ["(Sem conexão Telnet)"]
-
         slot_num = self._slot_number(slot)
         pon_num = self._pon_number(pon)
         onu_num = self._onu_number(onu)

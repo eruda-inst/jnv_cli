@@ -1,9 +1,8 @@
 import select
 import socket
 import time
-from typing import ClassVar
 
-from .. import config
+from ..config import settings
 
 IAC: bytes = bytes([255])
 DONT: bytes = bytes([254])
@@ -13,43 +12,40 @@ WILL: bytes = bytes([251])
 
 
 class TelnetClient:
-    DEFAULT_TIMEOUT: ClassVar[float] = 10.0
-
     def __init__(
         self,
         hostname: str,
         port: int = 23,
-        username: str = config.settings.olt_fiberhome_default_username,
-        password: str = config.settings.olt_fiberhome_default_password.get_secret_value(),
-        timeout: float = DEFAULT_TIMEOUT,
+        username: str = settings.olt_fiberhome_default_username,
+        password: str = settings.olt_fiberhome_default_password.get_secret_value(),
+        timeout: float = 30,
     ) -> None:
-        self.hostname: str = hostname
-        self.port: int = port
-        self.username: str = username
-        self.password: str = password
-        self.timeout: float = timeout
-        self._socket: socket.socket | None = None
-        self.is_connected: bool = False
+        self.hostname = hostname
+        self.port = port
+        self.username = username
+        self.password = password
+        self.timeout = timeout
+
+        self.connect()
 
     def connect(self) -> None:
         self._socket = socket.create_connection(
-            (self.hostname, self.port), timeout=self.timeout
+            address=(self.hostname, self.port), timeout=self.timeout
         )
-        self.is_connected = True
 
-        self._read_until(["Login:", "login:"])
-        self._write(f"{self.username}\r\n")
+        self._read_until(match=["Login:", "login:"])
+        self._write(data=f"{self.username}\r\n")
 
-        self._read_until(["Password:", "password:"])
-        self._write(f"{self.password}\r\n")
+        self._read_until(match=["Password:", "password:"])
+        self._write(data=f"{self.password}\r\n")
 
-        self._read_until(["User>", ">"])
-        self._write("EN\r\n")
+        self._read_until(match=["User>", ">"])
+        self._write(data="EN\r\n")
 
-        self._read_until(["Password:", "password:"])
-        self._write(f"{self.password}\r\n")
+        self._read_until(match=["Password:", "password:"])
+        self._write(data=f"{self.password}\r\n")
 
-        self._read_until(["Admin#", "#"])
+        self._read_until(match=["Admin#", "#"])
 
     def close(self) -> None:
         if self._socket:
@@ -60,17 +56,13 @@ class TelnetClient:
             finally:
                 self._socket.close()
                 self._socket = None
-        self.is_connected = False
 
     def send_command(
         self, command: str, expected_prompts: list[str] | None = None
     ) -> str:
-        if not self.is_connected or self._socket is None:
-            raise RuntimeError("Cliente Telnet não está conectado.")
-
         prompts = expected_prompts or ["#", ">"]
-        self._write(f"{command.strip()}\r\n")
-        return self._read_until(prompts)
+        self._write(data=f"{command.strip()}\r\n")
+        return self._read_until(match=prompts)
 
     def _write(self, data: str) -> None:
         if self._socket is None:
@@ -99,7 +91,7 @@ class TelnetClient:
                 break
 
             buffer.extend(self._clean_iac_bytes(chunk))
-            text_decoded = buffer.decode("utf-8", errors="replace")
+            text_decoded = buffer.decode(encoding="utf-8", errors="replace")
 
             lines = text_decoded.strip().splitlines()
             last_line = lines[-1] if lines else ""
@@ -110,7 +102,7 @@ class TelnetClient:
             if any(target in text_decoded for target in targets):
                 return text_decoded
 
-        return buffer.decode("utf-8", errors="replace")
+        return buffer.decode(encoding="utf-8", errors="replace")
 
     def _clean_iac_bytes(self, data: bytes) -> bytes:
         clean_bytes = bytearray()

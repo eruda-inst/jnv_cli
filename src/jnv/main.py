@@ -1,7 +1,7 @@
 import curses
 
-from .clients.ssh import SSHClient
-from .clients.telnet import TelnetClient
+from .clients.ssh_client import SSHClient
+from .clients.telnet_client import TelnetClient
 from .constants import (
     CMD_ONU_ALARMS,
     CMD_PON_ALARMS,
@@ -9,8 +9,8 @@ from .constants import (
     OLT_PONS,
     OLTS,
 )
-from .olts.datacom import DatacomOLT
-from .olts.fiberhome import FiberhomeOLT
+from .olts.datacom_olt import DatacomOLT
+from .olts.fiberhome_olt import FiberhomeOLT
 from .ui import UI
 
 
@@ -27,7 +27,6 @@ def _open_connection_for(
         hostname = FiberhomeOLT.OLT_TELNET_HOSTNAMES[olt]
         client = TelnetClient(hostname=hostname)
         ui.show_loading([f"OLT: {olt}", f"Conectando via Telnet a {hostname}..."])
-        client.connect()
         return client, FiberhomeOLT(telnet_client=client), True
 
     ui.show_result(
@@ -38,7 +37,6 @@ def _open_connection_for(
 
 
 def _onu_label(olt_device: DatacomOLT | FiberhomeOLT, onu: dict) -> str:
-    """Formata o rótulo da ONU conforme o tipo de OLT."""
     if isinstance(olt_device, FiberhomeOLT):
         return f"{onu['label']} — {onu['status']}"
     return (
@@ -50,7 +48,6 @@ def _onu_label(olt_device: DatacomOLT | FiberhomeOLT, onu: dict) -> str:
 def _run_onu_alarms(
     olt_device: DatacomOLT | FiberhomeOLT, slot: str, pon: str, onu: dict
 ) -> list[str]:
-    """Executa o comando de alarmes de ONU respeitando a assinatura de cada OLT."""
     if isinstance(olt_device, FiberhomeOLT):
         return olt_device.run_onu_alarms(slot=slot, pon=pon, onu=onu["id"])
     return olt_device.run_onu_alarms(pon=pon, onu=onu["id"])

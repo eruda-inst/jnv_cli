@@ -1,20 +1,22 @@
 from typing import ClassVar
 
-from .. import clients, config, constants
+from .. import constants
+from ..clients.ssh_client import SSHClient
+from ..config import settings
 
 
 class DatacomOLT:
     NON_SSH_OLTS: ClassVar[frozenset[str]] = frozenset({"OLT ACIJA", "OLT NEWNET"})
 
     OLT_SSH_HOSTNAMES: ClassVar[dict[str, str]] = {
-        "OLT ITAITU": config.settings.olt_itaitu_hostname,
-        "OLT JAC 3": config.settings.olt_jac_3_hostname,
-        "OLT LAJES": config.settings.olt_lajes_hostname,
-        "OLT PALMEIRINHA": config.settings.olt_palmeirinha_hostname,
-        "OLT PARAÍSO": config.settings.olt_paraiso_hostname,
+        "OLT ITAITU": settings.olt_itaitu_hostname,
+        "OLT JAC 3": settings.olt_jac_3_hostname,
+        "OLT LAJES": settings.olt_lajes_hostname,
+        "OLT PALMEIRINHA": settings.olt_palmeirinha_hostname,
+        "OLT PARAÍSO": settings.olt_paraiso_hostname,
     }
 
-    def __init__(self, ssh_client: clients.SSHClient) -> None:
+    def __init__(self, ssh_client: SSHClient) -> None:
         self.ssh_client = ssh_client
 
     @staticmethod
@@ -45,9 +47,6 @@ class DatacomOLT:
         return stdout.splitlines() or ["(Sem alarmes)"]
 
     def get_onus(self, slot: str, pon: str) -> list[constants.ONU_DATACOM]:
-        if not self.ssh_client:
-            return []
-
         command = f"show interface gpon 1/{self._slot_number(slot)}/{self._pon_number(pon)} onu"
         lines = self._run_ssh(command=command)
         lines = lines[2:]
@@ -78,9 +77,6 @@ class DatacomOLT:
         return onus
 
     def run_onu_alarms(self, pon: str = "PON 001", onu: int | str = 1) -> list[str]:
-        if self.ssh_client is None:
-            return ["(Sem conexão SSH)"]
-
         pon_num = self._pon_number(pon)
         onu_num = self._onu_number(onu)
         onu_num = int(onu_num) - 1
