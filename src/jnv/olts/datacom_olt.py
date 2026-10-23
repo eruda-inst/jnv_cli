@@ -1,3 +1,4 @@
+import re
 from typing import ClassVar
 
 from .. import constants
@@ -15,6 +16,10 @@ class DatacomOLT:
         "OLT PALMEIRINHA": settings.olt_palmeirinha_hostname,
         "OLT PARAÍSO": settings.olt_paraiso_hostname,
     }
+
+    _GPON_INTERFACE_RE: ClassVar[re.Pattern[str]] = re.compile(
+        r"gpon-\d+/\d+/\d+/(\d+)"
+    )
 
     def __init__(self, ssh_client: SSHClient) -> None:
         self.ssh_client = ssh_client
@@ -75,6 +80,22 @@ class DatacomOLT:
             )
 
         return onus
+
+    @classmethod
+    def get_onu_ids_with_alarm(
+        cls, alarm_lines: list[str], alarm_code: str
+    ) -> set[int]:
+        onu_ids: set[int] = set()
+        code_re = re.compile(rf"\b{re.escape(alarm_code)}\b")
+
+        for line in alarm_lines:
+            if not code_re.search(line):
+                continue
+            match = cls._GPON_INTERFACE_RE.search(line)
+            if match:
+                onu_ids.add(int(match.group(1)))
+
+        return onu_ids
 
     def run_onu_alarms(self, pon: str = "PON 001", onu: int | str = 1) -> list[str]:
         pon_num = self._pon_number(pon)

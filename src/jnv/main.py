@@ -3,6 +3,7 @@ import curses
 from .clients.ssh_client import SSHClient
 from .clients.telnet_client import TelnetClient
 from .constants import (
+    ALARM_FILTERS,
     CMD_ONU_ALARMS,
     CMD_PON_ALARMS,
     COMMANDS,
@@ -65,6 +66,7 @@ def main(stdscr: curses.window) -> None:
     last_slot_idx = 0
     last_pon_idx = 0
     last_cmd_idx = 0
+    last_filter_idx = 0
     last_onu_idx = 0
 
     while True:
@@ -79,6 +81,7 @@ def main(stdscr: curses.window) -> None:
         if idx != last_olt_idx:
             last_slot_idx = 0
             last_pon_idx = 0
+            last_filter_idx = 0
             last_onu_idx = 0
         last_olt_idx = idx
         olt = olts[idx]
@@ -175,34 +178,115 @@ def main(stdscr: curses.window) -> None:
                                 )
                                 continue
 
-                            labels = [_onu_label(olt_device, o) for o in onus]
+                            if isinstance(olt_device, DatacomOLT):
+                                pon_alarms_cache: list[str] | None = None
 
-                            while True:
-                                idx_onu = ui.select_menu(
-                                    "Selecione a ONU",
-                                    labels,
-                                    back=True,
-                                    context=[
-                                        f"OLT: {olt}",
-                                        f"SLOT: {slot}",
-                                        f"PON: {pon}",
-                                        f"Comando: {description}",
-                                    ],
-                                    default=last_onu_idx,
-                                )
-                                if idx_onu is None:
-                                    break
+                                while True:
+                                    filter_labels = [
+                                        label for _, label in ALARM_FILTERS
+                                    ]
+                                    idx_filter = ui.select_menu(
+                                        "Selecione o filtro de alarme",
+                                        filter_labels,
+                                        back=True,
+                                        context=ctx_base,
+                                        default=last_filter_idx,
+                                    )
+                                    if idx_filter is None:
+                                        break
+                                    if idx_filter != last_filter_idx:
+                                        last_onu_idx = 0
+                                    last_filter_idx = idx_filter
 
-                                last_onu_idx = idx_onu
+                                    filter_code, filter_label = ALARM_FILTERS[
+                                        idx_filter
+                                    ]
 
-                                onu = onus[idx_onu]
-                                ui.show_loading(ctx_base + [f"ONU: {onu['label']}"])
-                                lines = _run_onu_alarms(olt_device, slot, pon, onu)
-                                ui.show_result(
-                                    f"{description} — {olt} / {slot} / {pon} "
-                                    f"/ {onu['label']}",
-                                    lines,
-                                )
+                                    if filter_code is None:
+                                        filtered_onus = onus
+                                    else:
+                                        if pon_alarms_cache is None:
+                                            ui.show_loading(
+                                                ctx_base + [f"Filtro: {filter_label}"]
+                                            )
+                                            pon_alarms_cache = (
+                                                olt_device.run_pon_alarms(
+                                                    pon_number=pon
+                                                )
+                                            )
+                                        alarm_onu_ids = (
+                                            olt_device.get_onu_ids_with_alarm(
+                                                pon_alarms_cache, filter_code
+                                            )
+                                        )
+                                        filtered_onus = [
+                                            o
+                                            for o in onus
+                                            if (o["id"] - 1) in alarm_onu_ids
+                                        ]
+
+                                    if not filtered_onus:
+                                        ui.show_result(
+                                            f"{description} — {olt} / {slot} "
+                                            f"/ {pon} / {filter_label}",
+                                            [
+                                                f"Nenhuma ONU em {filter_label} "
+                                                "encontrada nesta PON."
+                                            ],
+                                        )
+                                        continue
+
+                                    labels = [
+                                        _onu_label(olt_device, o) for o in filtered_onus
+                                    ]
+                                    filter_ctx = ctx_base + [f"Filtro: {filter_label}"]
+
+                                    while True:
+                                        idx_onu = ui.select_menu(
+                                            f"Selecione a ONU — {filter_label}",
+                                            labels,
+                                            back=True,
+                                            context=filter_ctx,
+                                            default=last_onu_idx,
+                                        )
+                                        if idx_onu is None:
+                                            break
+                                        last_onu_idx = idx_onu
+
+                                        onu = filtered_onus[idx_onu]
+                                        ui.show_loading(
+                                            filter_ctx + [f"ONU: {onu['label']}"]
+                                        )
+                                        lines = _run_onu_alarms(
+                                            olt_device, slot, pon, onu
+                                        )
+                                        ui.show_result(
+                                            f"{description} — {olt} / {slot} "
+                                            f"/ {pon} / {onu['label']}",
+                                            lines,
+                                        )
+                            else:
+                                labels = [_onu_label(olt_device, o) for o in onus]
+                                while True:
+                                    idx_onu = ui.select_menu(
+                                        "Selecione a ONU",
+                                        labels,
+                                        back=True,
+                                        context=ctx_base,
+                                        default=last_onu_idx,
+                                    )
+                                    if idx_onu is None:
+                                        break
+                                    last_onu_idx = idx_onu
+
+                                    onu = onus[idx_onu]
+                                    ui.show_loading(ctx_base + [f"ONU: {onu['label']}"])
+                                    lines = _run_onu_alarms(olt_device, slot, pon, onu)
+                                    ui.show_result(
+                                        f"{description} — {olt} / {slot} "
+                                        f"/ {pon} / {onu['label']}",
+                                        lines,
+                                    )
 
                             continue
 
