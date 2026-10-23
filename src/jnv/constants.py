@@ -1,6 +1,6 @@
 from typing import TypedDict
 
-TITLE: str = "JNV - Jacobina Network Viewer v1.2.7"
+TITLE: str = "JNV - Jacobina Network Viewer v1.3.1"
 CREDITS: str = "Desenvolvido pela equipe de inovação da Newnet"
 
 CMD_ONU_ALARMS: str = "O"
@@ -13,10 +13,10 @@ COMMANDS: list[tuple[str, str]] = [
 
 ALARM_FILTERS: list[tuple[str | None, str]] = [
     (None, "Todas as ONUs"),
-    ("GPON_DGi", "ONUs em Dying Gasp"),
-    ("GPON_LOSi", "ONUs em link loss"),
-    ("GPON_LOFi", "ONUs em frame loss"),
-    ("GPON_LOAMi", "ONUs em PLOAM loss"),
+    ("GPON_DGi", "ONUs com perda de energia (Dying Gasp)"),
+    ("GPON_LOSi", "ONUs com perda de sinal (LOS)"),
+    ("GPON_LOFi", "ONUs com perda de quadro (LOF)"),
+    ("GPON_LOAMi", "ONUs com perda de PLOAM (PLOAM Loss)"),
 ]
 
 

@@ -182,8 +182,19 @@ def main(stdscr: curses.window) -> None:
                                 pon_alarms_cache: list[str] | None = None
 
                                 while True:
+                                    max_code_len = max(
+                                        (
+                                            len(code)
+                                            for code, _ in ALARM_FILTERS
+                                            if code
+                                        ),
+                                        default=0,
+                                    )
                                     filter_labels = [
-                                        label for _, label in ALARM_FILTERS
+                                        label
+                                        if code is None
+                                        else f"{code.ljust(max_code_len)} — {label}"
+                                        for code, label in ALARM_FILTERS
                                     ]
                                     idx_filter = ui.select_menu(
                                         "Selecione o filtro de alarme",
