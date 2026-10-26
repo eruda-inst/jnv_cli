@@ -7,6 +7,7 @@ from .constants import CREDITS, TITLE
 class UI:
     def __init__(self, stdscr: curses.window) -> None:
         self.stdscr = stdscr
+        curses.init_color(curses.COLOR_BLUE, 0, 0, 255)
         curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLUE)
         curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLUE)
         self.stdscr.bkgd(" ", curses.color_pair(1))
