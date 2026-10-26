@@ -20,14 +20,14 @@ def _open_connection_for(
 ) -> tuple[SSHClient | TelnetClient | None, DatacomOLT | FiberhomeOLT | None, bool]:
     if DatacomOLT.is_ssh_olt(olt):
         hostname = DatacomOLT.OLT_SSH_HOSTNAMES[olt]
-        client = SSHClient(hostname=hostname)
         ui.show_loading([f"OLT: {olt}", f"Conectando via SSH a {hostname}..."])
+        client = SSHClient(hostname=hostname)
         return client, DatacomOLT(ssh_client=client), True
 
     if FiberhomeOLT.is_telnet_olt(olt):
         hostname = FiberhomeOLT.OLT_TELNET_HOSTNAMES[olt]
-        client = TelnetClient(hostname=hostname)
         ui.show_loading([f"OLT: {olt}", f"Conectando via Telnet a {hostname}..."])
+        client = TelnetClient(hostname=hostname)
         return client, FiberhomeOLT(telnet_client=client), True
 
     ui.show_result(
@@ -71,10 +71,7 @@ def main(stdscr: curses.window) -> None:
 
     while True:
         idx = ui.select_menu(
-            "Selecione a OLT que você deseja acessar",
-            olts,
-            can_exit=False,
-            default=last_olt_idx,
+            "Selecione a OLT", olts, can_exit=False, default=last_olt_idx
         )
         if idx is None:
             continue
@@ -102,7 +99,7 @@ def main(stdscr: curses.window) -> None:
                         "Selecione o SLOT",
                         slots,
                         back=True,
-                        context=[f"OLT selecionada: {olt}"],
+                        context=[f"OLT: {olt}"],
                         default=last_slot_idx,
                     )
                     if idx is None:
@@ -113,7 +110,6 @@ def main(stdscr: curses.window) -> None:
                     last_slot_idx = idx
                     slot = slots[idx]
 
-                ui.show_loading([f"OLT: {olt}", f"SLOT: {slot}", "Buscando PONs..."])
                 available_pons = OLT_PONS[olt][slot]
 
                 while True:
@@ -239,10 +235,9 @@ def main(stdscr: curses.window) -> None:
                                     if not filtered_onus:
                                         ui.show_result(
                                             f"{description} — {olt} / {slot} "
-                                            f"/ {pon} / {filter_label}",
+                                            f"/ {pon} / {filter_code}",
                                             [
-                                                f"Nenhuma ONU em {filter_label} "
-                                                "encontrada nesta PON."
+                                                f"Nenhuma ONU nesta PON com alarme {filter_code}."
                                             ],
                                         )
                                         continue
@@ -294,8 +289,7 @@ def main(stdscr: curses.window) -> None:
                                     ui.show_loading(ctx_base + [f"ONU: {onu['label']}"])
                                     lines = _run_onu_alarms(olt_device, slot, pon, onu)
                                     ui.show_result(
-                                        f"{description} — {olt} / {slot} "
-                                        f"/ {pon} / {onu['label']}",
+                                        f"{description} — {olt} / {slot} / {pon} / {onu['label']}",
                                         lines,
                                     )
 
