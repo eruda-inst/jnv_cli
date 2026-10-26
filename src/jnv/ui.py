@@ -4,23 +4,33 @@ from collections.abc import Sequence
 from .constants import CREDITS, TITLE
 
 
-def _clean_str(text: str) -> str:
-    return text.replace("\x00", "").replace("\t", "    ")
-
-
 class UI:
     def __init__(self, stdscr: curses.window) -> None:
         self.stdscr = stdscr
 
-    def show_loading(self, context: Sequence[str] | None = None) -> None:
-        _, w = self.stdscr.getmaxyx()
+    def _prepare_screen(self) -> tuple[int, int]:
         self.stdscr.erase()
+        self.stdscr.border(
+            curses.ACS_VLINE,
+            curses.ACS_VLINE,
+            curses.ACS_HLINE,
+            curses.ACS_HLINE,
+            curses.ACS_DIAMOND,
+            curses.ACS_DIAMOND,
+            curses.ACS_DIAMOND,
+            curses.ACS_DIAMOND,
+        )
+        height, width = self.stdscr.getmaxyx()
+        return height, width
+
+    def show_loading(self, context: Sequence[str] | None = None) -> None:
+        _, w = self._prepare_screen()
         self.stdscr.addstr(1, max(0, (w - len(TITLE)) // 2), TITLE)
         self.stdscr.addstr(2, max(0, (w - len(CREDITS)) // 2), CREDITS, curses.A_DIM)
 
         if context:
             for i, line in enumerate(context):
-                self.stdscr.addstr(3 + i, 2, _clean_str(line), curses.A_DIM)
+                self.stdscr.addstr(3 + i, 2, line, curses.A_DIM)
 
         y = 4 + (len(context) if context else 0) + 1
         self.stdscr.addstr(y, 2, "Carregando...", curses.A_BOLD)
@@ -46,8 +56,7 @@ class UI:
         instructions = "(" + ", ".join(hints) + ")"
 
         while True:
-            h, w = self.stdscr.getmaxyx()
-            self.stdscr.erase()
+            h, w = self._prepare_screen()
 
             self.stdscr.addstr(1, max(0, (w - len(TITLE)) // 2), TITLE)
             self.stdscr.addstr(
@@ -56,10 +65,10 @@ class UI:
 
             if context:
                 for i, line in enumerate(context):
-                    self.stdscr.addstr(3 + i, 2, _clean_str(line), curses.A_DIM)
+                    self.stdscr.addstr(3 + i, 2, line, curses.A_DIM)
 
             y_question = 4 + (len(context) if context else 0)
-            self.stdscr.addstr(y_question, 2, _clean_str(question))
+            self.stdscr.addstr(y_question, 2, question)
             self.stdscr.addstr(y_question + 1, 2, instructions)
 
             y_base = y_question + 3
@@ -73,8 +82,7 @@ class UI:
             for idx in range(top, min(top + visible, len(options))):
                 y = y_base + (idx - top)
                 attr = curses.A_REVERSE if idx == selected else curses.A_NORMAL
-                opt_text = _clean_str(f"{idx + 1:03d} - {options[idx]} ")
-                self.stdscr.addstr(y, 4, opt_text, attr)
+                self.stdscr.addstr(y, 4, f"{idx + 1:03d} - {options[idx]} ", attr)
 
             self.stdscr.refresh()
             key = self.stdscr.getch()
@@ -97,26 +105,27 @@ class UI:
     def show_result(self, title: str, lines: Sequence[str]) -> None:
         top = 0
         while True:
-            h, w = self.stdscr.getmaxyx()
-            self.stdscr.erase()
+            h, w = self._prepare_screen()
 
             self.stdscr.addstr(1, max(0, (w - len(TITLE)) // 2), TITLE)
             self.stdscr.addstr(
                 2, max(0, (w - len(CREDITS)) // 2), CREDITS, curses.A_DIM
             )
-            self.stdscr.addstr(3, 2, _clean_str(title)[: max(0, w - 4)])
+            self.stdscr.addstr(4, 2, title[: max(0, w - 4)])
 
-            y_base = 5
-            visible = max(1, h - y_base - 2)
+            y_base = 6
+            visible = max(1, h - y_base - 3)
             max_top = max(0, len(lines) - visible)
             top = min(top, max_top)
 
+            lines = [l.strip() for l in lines if l]
+
             for i in range(top, min(top + visible, len(lines))):
-                line_content = _clean_str(lines[i])[: max(0, w - 6)]
+                line_content = lines[i][: max(0, w - 6)]
                 self.stdscr.addstr(y_base + (i - top), 4, line_content)
 
             footer = "(↑/↓ rolar, qualquer outra tecla volta)"
-            self.stdscr.addstr(h - 1, 2, footer[: max(0, w - 3)], curses.A_DIM)
+            self.stdscr.addstr(h - 2, 2, footer[: max(0, w - 6)], curses.A_DIM)
             self.stdscr.refresh()
 
             key = self.stdscr.getch()
