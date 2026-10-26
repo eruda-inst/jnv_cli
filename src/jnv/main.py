@@ -2,14 +2,7 @@ import curses
 
 from .clients.ssh_client import SSHClient
 from .clients.telnet_client import TelnetClient
-from .constants import (
-    ALARM_FILTERS,
-    CMD_ONU_ALARMS,
-    CMD_PON_ALARMS,
-    COMMANDS,
-    OLT_PONS,
-    OLTS,
-)
+from .constants import ALARM_FILTERS, COMMANDS, OLT_PONS, OLTS
 from .olts.datacom_olt import DatacomOLT
 from .olts.fiberhome_olt import FiberhomeOLT
 from .ui import UI
@@ -60,7 +53,7 @@ def main(stdscr: curses.window) -> None:
 
     ui = UI(stdscr)
     olts = list(OLTS.keys())
-    command_labels = [f"{letter} - {description}" for letter, description in COMMANDS]
+    command_labels = [c for c in COMMANDS]
 
     last_olt_idx = 0
     last_slot_idx = 0
@@ -143,33 +136,33 @@ def main(stdscr: curses.window) -> None:
                             break
                         last_cmd_idx = idx
 
-                        letter, description = COMMANDS[idx]
+                        command = COMMANDS[idx]
 
                         ctx_base = [
                             f"OLT: {olt}",
                             f"SLOT: {slot}",
                             f"PON: {pon}",
-                            f"Comando: {description}",
+                            f"Comando: {command}",
                         ]
 
-                        if letter == CMD_PON_ALARMS:
+                        if command == "Consultar alarmes da PON":
                             ui.show_loading(ctx_base)
                             if isinstance(olt_device, FiberhomeOLT):
                                 lines = olt_device.run_pon_alarms(slot=slot, pon=pon)
                             else:
                                 lines = olt_device.run_pon_alarms(pon_number=pon)
                             ui.show_result(
-                                f"{description} — {olt} / {slot} / {pon}",
+                                f"{command} — {olt} / {slot} / {pon}",
                                 lines,
                             )
                             continue
 
-                        if letter == CMD_ONU_ALARMS:
+                        if command == "Consultar alarmes das ONUs":
                             ui.show_loading(ctx_base)
                             onus = olt_device.get_onus(slot, pon)
                             if not onus:
                                 ui.show_result(
-                                    f"{description} — {olt} / {slot} / {pon}",
+                                    f"{command} — {olt} / {slot} / {pon}",
                                     ["Nenhuma ONU encontrada nesta PON."],
                                 )
                                 continue
@@ -234,7 +227,7 @@ def main(stdscr: curses.window) -> None:
 
                                     if not filtered_onus:
                                         ui.show_result(
-                                            f"{description} — {olt} / {slot} "
+                                            f"{command} — {olt} / {slot} "
                                             f"/ {pon} / {filter_code}",
                                             [
                                                 f"Nenhuma ONU nesta PON com alarme {filter_code}."
@@ -267,7 +260,7 @@ def main(stdscr: curses.window) -> None:
                                             olt_device, slot, pon, onu
                                         )
                                         ui.show_result(
-                                            f"{description} — {olt} / {slot} "
+                                            f"{command} — {olt} / {slot} "
                                             f"/ {pon} / {onu['label']}",
                                             lines,
                                         )
@@ -289,7 +282,7 @@ def main(stdscr: curses.window) -> None:
                                     ui.show_loading(ctx_base + [f"ONU: {onu['label']}"])
                                     lines = _run_onu_alarms(olt_device, slot, pon, onu)
                                     ui.show_result(
-                                        f"{description} — {olt} / {slot} / {pon} / {onu['label']}",
+                                        f"{command} — {olt} / {slot} / {pon} / {onu['label']}",
                                         lines,
                                     )
 

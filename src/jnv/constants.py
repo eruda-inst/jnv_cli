@@ -1,15 +1,9 @@
 from typing import TypedDict
 
-TITLE: str = "JNV - Jacobina Network Viewer v1.3.6"
+TITLE: str = "JNV - Jacobina Network Viewer v1.3.7"
 CREDITS: str = "Desenvolvido pela equipe de inovação da Newnet"
 
-CMD_ONU_ALARMS: str = "O"
-CMD_PON_ALARMS: str = "P"
-
-COMMANDS: list[tuple[str, str]] = [
-    (CMD_ONU_ALARMS, "Consultar alarmes das ONUs"),
-    (CMD_PON_ALARMS, "Consultar alarmes da PON"),
-]
+COMMANDS: list[str] = ["Consultar alarmes das ONUs", "Consultar alarmes da PON"]
 
 ALARM_FILTERS: list[tuple[str | None, str]] = [
     (None, "Todas as ONUs"),
