@@ -251,7 +251,7 @@ def main(stdscr: curses.window) -> None:
                                             f"{command} — {olt} / {slot} "
                                             f"/ {pon} / {filter_code}",
                                             [
-                                                f"Nenhuma ONU nesta PON com alarme {filter_code}."
+                                                f"Nenhuma ONU nesta PON com o filtro '{filter_code}'."
                                             ],
                                         )
                                         continue
@@ -328,7 +328,7 @@ def main(stdscr: curses.window) -> None:
                                             f"{command} — {olt} / {slot} "
                                             f"/ {pon} / {filter_label}",
                                             [
-                                                f"Nenhuma ONU nesta PON com o filtro '{filter_label}'."
+                                                f"Nenhuma ONU nesta PON com o filtro '{filter_code}'."
                                             ],
                                         )
                                         continue
