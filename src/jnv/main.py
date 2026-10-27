@@ -2,7 +2,13 @@ import curses
 
 from .clients.ssh_client import SSHClient
 from .clients.telnet_client import TelnetClient
-from .constants import ALARM_FILTERS, COMMANDS, OLT_PONS, OLTS
+from .constants import (
+    ALARM_FILTERS,
+    ALARM_FILTERS_FIBERHOME,
+    COMMANDS,
+    OLT_PONS,
+    OLTS,
+)
 from .olts.datacom_olt import DatacomOLT
 from .olts.fiberhome_olt import FiberhomeOLT
 from .ui import UI
@@ -45,6 +51,21 @@ def _run_onu_alarms(
     if isinstance(olt_device, FiberhomeOLT):
         return olt_device.run_onu_alarms(slot=slot, pon=pon, onu=onu["id"])
     return olt_device.run_onu_alarms(pon=pon, onu=onu["id"])
+
+
+def _filter_fiberhome_onus(onus: list[dict], filter_code: str | None) -> list[dict]:
+    if filter_code is None:
+        return onus
+    if filter_code == "Active":
+        return [o for o in onus if o["status"].lower() == "active"]
+    if filter_code == "Inactive":
+        # Alterado para listar APENAS status explicitamente "inactive"
+        return [o for o in onus if o["status"].lower() == "inactive"]
+    if filter_code == "Link loss":
+        return [o for o in onus if o["status"].lower() == "link loss"]
+    if filter_code == "Power down":
+        return [o for o in onus if o["status"].lower() == "power down"]
+    return onus
 
 
 def main(stdscr: curses.window) -> None:
@@ -264,27 +285,83 @@ def main(stdscr: curses.window) -> None:
                                             f"/ {pon} / {onu['label']}",
                                             lines,
                                         )
-                            else:
-                                labels = [_onu_label(olt_device, o) for o in onus]
+
+                            elif isinstance(olt_device, FiberhomeOLT):
                                 while True:
-                                    idx_onu = ui.select_menu(
-                                        "Selecione a ONU",
-                                        labels,
+                                    max_code_len = max(
+                                        (
+                                            len(code)
+                                            for code, _ in ALARM_FILTERS_FIBERHOME
+                                            if code
+                                        ),
+                                        default=0,
+                                    )
+                                    filter_labels = [
+                                        label
+                                        if code is None
+                                        else f"{code.ljust(max_code_len)} — {label}"
+                                        for code, label in ALARM_FILTERS_FIBERHOME
+                                    ]
+                                    idx_filter = ui.select_menu(
+                                        "Selecione o filtro de status",
+                                        filter_labels,
                                         back=True,
                                         context=ctx_base,
-                                        default=last_onu_idx,
+                                        default=last_filter_idx,
                                     )
-                                    if idx_onu is None:
+                                    if idx_filter is None:
                                         break
-                                    last_onu_idx = idx_onu
+                                    if idx_filter != last_filter_idx:
+                                        last_onu_idx = 0
+                                    last_filter_idx = idx_filter
 
-                                    onu = onus[idx_onu]
-                                    ui.show_loading(ctx_base + [f"ONU: {onu['label']}"])
-                                    lines = _run_onu_alarms(olt_device, slot, pon, onu)
-                                    ui.show_result(
-                                        f"{command} — {olt} / {slot} / {pon} / {onu['label']}",
-                                        lines,
+                                    filter_code, filter_label = ALARM_FILTERS_FIBERHOME[
+                                        idx_filter
+                                    ]
+
+                                    filtered_onus = _filter_fiberhome_onus(
+                                        onus, filter_code
                                     )
+
+                                    if not filtered_onus:
+                                        ui.show_result(
+                                            f"{command} — {olt} / {slot} "
+                                            f"/ {pon} / {filter_label}",
+                                            [
+                                                f"Nenhuma ONU nesta PON com o filtro '{filter_label}'."
+                                            ],
+                                        )
+                                        continue
+
+                                    labels = [
+                                        _onu_label(olt_device, o) for o in filtered_onus
+                                    ]
+                                    filter_ctx = ctx_base + [f"Filtro: {filter_label}"]
+
+                                    while True:
+                                        idx_onu = ui.select_menu(
+                                            f"Selecione a ONU — {filter_label}",
+                                            labels,
+                                            back=True,
+                                            context=filter_ctx,
+                                            default=last_onu_idx,
+                                        )
+                                        if idx_onu is None:
+                                            break
+                                        last_onu_idx = idx_onu
+
+                                        onu = filtered_onus[idx_onu]
+                                        ui.show_loading(
+                                            filter_ctx + [f"ONU: {onu['label']}"]
+                                        )
+                                        lines = _run_onu_alarms(
+                                            olt_device, slot, pon, onu
+                                        )
+                                        ui.show_result(
+                                            f"{command} — {olt} / {slot} "
+                                            f"/ {pon} / {onu['label']}",
+                                            lines,
+                                        )
 
                             continue
 

@@ -111,17 +111,26 @@ class FiberhomeOLT:
 
         onus: list[constants.ONU_FIBERHOME] = []
         for line in lines:
-            onu_id = int(line.split()[5])
-            onu_status = line.split()[8]
-            onu_status = onu_status.removesuffix(".")
+            if "status" not in line or ":" not in line:
+                continue
 
-            onus.append(
-                constants.ONU_FIBERHOME(
-                    id=onu_id,
-                    label=f"ONU {onu_id:03d}",
-                    status=onu_status,
+            parts = line.split()
+            if len(parts) < 9:
+                continue
+
+            try:
+                onu_id = int(parts[5])
+                onu_status = line.split(":", 1)[1].strip().removesuffix(".")
+
+                onus.append(
+                    constants.ONU_FIBERHOME(
+                        id=onu_id,
+                        label=f"ONU {onu_id:03d}",
+                        status=onu_status,
+                    )
                 )
-            )
+            except ValueError, IndexError:
+                continue
 
         return onus
 
