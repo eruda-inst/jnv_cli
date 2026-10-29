@@ -130,6 +130,21 @@ class FiberhomeOLT:
 
         return onus
 
+    def filter_onus(
+        self, onus: list[ONUFiberhome], filter_code: str | None
+    ) -> list[ONUFiberhome]:
+        if filter_code is None:
+            return onus
+        if filter_code == "Active":
+            return [o for o in onus if o["status"].lower() == "active"]
+        if filter_code == "Inactive":
+            return [o for o in onus if o["status"].lower() == "inactive"]
+        if filter_code == "Link loss":
+            return [o for o in onus if o["status"].lower() == "link loss"]
+        if filter_code == "Power down":
+            return [o for o in onus if o["status"].lower() == "power down"]
+        return onus
+
     def run_pon_alarms(self, slot: str = "SLOT 001", pon: str = "PON 001") -> list[str]:
         slot_number = self._slot_number(slot)
         pon_number = self._pon_number(pon)

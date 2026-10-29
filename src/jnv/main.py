@@ -36,28 +36,6 @@ def _open_connection_for(
     return None, None, False
 
 
-def _run_onu_alarms(
-    olt_device: DatacomOLT | FiberhomeOLT, slot: str, pon: str, onu: dict
-) -> list[str]:
-    if isinstance(olt_device, FiberhomeOLT):
-        return olt_device.run_onu_alarms(slot=slot, pon=pon, onu=onu["id"])
-    return olt_device.run_onu_alarms(pon=pon, onu=onu["id"])
-
-
-def _filter_fiberhome_onus(onus: list[dict], filter_code: str | None) -> list[dict]:
-    if filter_code is None:
-        return onus
-    if filter_code == "Active":
-        return [o for o in onus if o["status"].lower() == "active"]
-    if filter_code == "Inactive":
-        return [o for o in onus if o["status"].lower() == "inactive"]
-    if filter_code == "Link loss":
-        return [o for o in onus if o["status"].lower() == "link loss"]
-    if filter_code == "Power down":
-        return [o for o in onus if o["status"].lower() == "power down"]
-    return onus
-
-
 def main(stdscr: curses.window) -> None:
     curses.curs_set(0)
     stdscr.keypad(True)
@@ -266,8 +244,8 @@ def main(stdscr: curses.window) -> None:
                                         ui.show_loading(
                                             filter_ctx + [f"ONU: {onu['label']}"]
                                         )
-                                        lines = _run_onu_alarms(
-                                            olt_device, slot, pon, onu
+                                        lines = olt_device.run_onu_alarms(
+                                            pon=pon, onu=str(onu["id"])
                                         )
                                         ui.show_result(
                                             f"{command} — {olt} / {slot} "
@@ -308,7 +286,7 @@ def main(stdscr: curses.window) -> None:
                                         idx_filter
                                     ]
 
-                                    filtered_onus = _filter_fiberhome_onus(
+                                    filtered_onus = olt_device.filter_onus(
                                         onus, filter_code
                                     )
 
@@ -344,8 +322,8 @@ def main(stdscr: curses.window) -> None:
                                         ui.show_loading(
                                             filter_ctx + [f"ONU: {onu['label']}"]
                                         )
-                                        lines = _run_onu_alarms(
-                                            olt_device, slot, pon, onu
+                                        lines = olt_device.run_onu_alarms(
+                                            slot=slot, pon=pon, onu=onu["id"]
                                         )
                                         ui.show_result(
                                             f"{command} — {olt} / {slot} "
