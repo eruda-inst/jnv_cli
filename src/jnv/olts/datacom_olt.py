@@ -40,12 +40,9 @@ class DatacomOLT:
     def is_ssh_olt(cls, olt: str) -> bool:
         return olt in cls.OLT_SSH_HOSTNAMES
 
-    def get_onus(
-        self, slot: str = "SLOT 001", pon: str = "PON 001"
-    ) -> list[ONUDatacom]:
-        slot_number = self._numberfy(value=slot)
+    def get_onus(self, pon: str = "PON 001") -> list[ONUDatacom]:
         pon_number = self._numberfy(value=pon)
-        command = f"show interface gpon 1/{slot_number}/{pon_number} onu"
+        command = f"show interface gpon 1/1/{pon_number} onu"
         lines = self._run_ssh(command=command)
         lines = lines[2:]
 
@@ -91,7 +88,7 @@ class DatacomOLT:
 
         return onu_ids
 
-    def run_onu_alarms(self, pon: str = "PON 001", onu: str = "PON 001") -> list[str]:
+    def run_onu_alarms(self, pon: str = "PON 001", onu: str = "ONU 000") -> list[str]:
         pon_number = self._numberfy(value=pon)
         onu_number = self._numberfy(value=onu) - 1
         command = f'show alarm | include "gpon-1/1/{pon_number}/{onu_number} "'

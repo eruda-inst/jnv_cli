@@ -179,7 +179,7 @@ def main(stdscr: curses.window) -> None:
 
                         if command == "Consultar alarmes das ONUs":
                             ui.show_loading(ctx_base)
-                            onus = olt_device.get_onus(slot, pon)
+                            onus = olt_device.get_onus(pon)
                             if not onus:
                                 ui.show_result(
                                     f"{command} — {olt} / {slot} / {pon}",
