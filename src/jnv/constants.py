@@ -1,6 +1,6 @@
 from typing import TypedDict
 
-TITLE: str = "JNV - Jacobina Network Viewer v1.4.3"
+TITLE: str = "JNV - Jacobina Network Viewer v1.4.4"
 CREDITS: str = "Desenvolvido pela equipe de inovação da Newnet"
 
 COMMANDS: list[str] = ["Consultar alarmes das ONUs", "Consultar alarmes da PON"]
@@ -21,11 +21,6 @@ ALARM_FILTERS_FIBERHOME: list[tuple[str | None, str]] = [
     ("Power down", "ONUs com perda de energia (Dying Gasp)"),
 ]
 
-
-ONU_DATACOM = TypedDict(
-    "ONU_DATACOM",
-    {"id": int, "label": str, "serial_number": str, "onu_state": str, "onu_name": str},
-)
 
 ONU_FIBERHOME = TypedDict("ONU_FIBERHOME", {"id": int, "label": str, "status": str})
 

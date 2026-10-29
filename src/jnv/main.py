@@ -59,7 +59,6 @@ def _filter_fiberhome_onus(onus: list[dict], filter_code: str | None) -> list[di
     if filter_code == "Active":
         return [o for o in onus if o["status"].lower() == "active"]
     if filter_code == "Inactive":
-        # Alterado para listar APENAS status explicitamente "inactive"
         return [o for o in onus if o["status"].lower() == "inactive"]
     if filter_code == "Link loss":
         return [o for o in onus if o["status"].lower() == "link loss"]
@@ -171,7 +170,7 @@ def main(stdscr: curses.window) -> None:
                             if isinstance(olt_device, FiberhomeOLT):
                                 lines = olt_device.run_pon_alarms(slot=slot, pon=pon)
                             else:
-                                lines = olt_device.run_pon_alarms(pon_number=pon)
+                                lines = olt_device.run_pon_alarms(pon=pon)
                             ui.show_result(
                                 f"{command} — {olt} / {slot} / {pon}",
                                 lines,
@@ -231,9 +230,7 @@ def main(stdscr: curses.window) -> None:
                                                 ctx_base + [f"Filtro: {filter_label}"]
                                             )
                                             pon_alarms_cache = (
-                                                olt_device.run_pon_alarms(
-                                                    pon_number=pon
-                                                )
+                                                olt_device.run_pon_alarms(pon=pon)
                                             )
                                         alarm_onu_ids = (
                                             olt_device.get_onu_ids_with_alarm(
