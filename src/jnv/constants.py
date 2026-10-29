@@ -1,4 +1,4 @@
-TITLE: str = "JNV (Jacobina Network Viewer) v1.4.7"
+TITLE: str = "JNV (Jacobina Network Viewer) v1.4.9"
 CREDITS: str = "Desenvolvido pelo setor de inovação da Newnet"
 
 COMMANDS: list[str] = ["Consultar alarmes das ONUs", "Consultar alarmes da PON"]

@@ -40,6 +40,13 @@ class DatacomOLT:
     def is_ssh_olt(cls, olt: str) -> bool:
         return olt in cls.OLT_SSH_HOSTNAMES
 
+    def get_onu_label(self, onu: ONUDatacom) -> str:
+        onu_label = onu["label"]
+        onu_serial_number = onu["serial_number"]
+        onu_state = onu["onu_state"]
+        onu_name = onu["onu_name"]
+        return f"{onu_label} — {onu_serial_number} — {onu_state} — {onu_name}"
+
     def get_onus(self, pon: str = "PON 001") -> list[ONUDatacom]:
         pon_number = self._numberfy(value=pon)
         command = f"show interface gpon 1/1/{pon_number} onu"

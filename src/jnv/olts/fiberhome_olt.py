@@ -22,10 +22,6 @@ class FiberhomeOLT:
     def __init__(self, telnet_client: TelnetClient) -> None:
         self.telnet_client = telnet_client
 
-    @classmethod
-    def is_telnet_olt(cls, olt: str) -> bool:
-        return olt in cls.TELNET_OLTS
-
     @staticmethod
     def _slot_number(slot: str) -> str:
         raw = slot.rsplit(" ", 1)[-1]
@@ -91,6 +87,15 @@ class FiberhomeOLT:
                     output_lines.append(line.strip().removesuffix("."))
 
         return output_lines or ["(Sem saída ou sem alarmes registrados)"]
+
+    @classmethod
+    def is_telnet_olt(cls, olt: str) -> bool:
+        return olt in cls.TELNET_OLTS
+
+    def get_onu_label(self, onu: ONUFiberhome) -> str:
+        onu_label = onu["label"]
+        onu_status = onu["status"]
+        return f"{onu_label} — {onu_status}"
 
     def get_onus(
         self, slot: str = "SLOT 001", pon: str = "PON 001"

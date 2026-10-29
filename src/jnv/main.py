@@ -36,15 +36,6 @@ def _open_connection_for(
     return None, None, False
 
 
-def _onu_label(olt_device: DatacomOLT | FiberhomeOLT, onu: dict) -> str:
-    if isinstance(olt_device, FiberhomeOLT):
-        return f"{onu['label']} — {onu['status']}"
-    return (
-        f"{onu['label']} — {onu['serial_number']} — "
-        f"{onu['onu_state']} — {onu['onu_name']}"
-    )
-
-
 def _run_onu_alarms(
     olt_device: DatacomOLT | FiberhomeOLT, slot: str, pon: str, onu: dict
 ) -> list[str]:
@@ -254,7 +245,8 @@ def main(stdscr: curses.window) -> None:
                                         continue
 
                                     labels = [
-                                        _onu_label(olt_device, o) for o in filtered_onus
+                                        olt_device.get_onu_label(onu=onu)
+                                        for onu in filtered_onus
                                     ]
                                     filter_ctx = ctx_base + [f"Filtro: {filter_label}"]
 
@@ -331,7 +323,8 @@ def main(stdscr: curses.window) -> None:
                                         continue
 
                                     labels = [
-                                        _onu_label(olt_device, o) for o in filtered_onus
+                                        olt_device.get_onu_label(onu=onu)
+                                        for onu in filtered_onus
                                     ]
                                     filter_ctx = ctx_base + [f"Filtro: {filter_label}"]
 
