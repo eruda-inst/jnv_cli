@@ -1,17 +1,17 @@
 import curses
 
-from jnv.clients.ssh_client import SSHClient
-from jnv.clients.telnet_client import TelnetClient
-from jnv.constants import (
+from jnv_cli.clients.ssh_client import SSHClient
+from jnv_cli.clients.telnet_client import TelnetClient
+from jnv_cli.constants import (
     ALARM_FILTERS,
     ALARM_FILTERS_FIBERHOME,
     COMMANDS,
     OLT_PONS,
     OLTS,
 )
-from jnv.olts.datacom_olt import DatacomOLT
-from jnv.olts.fiberhome_olt import FiberhomeOLT
-from jnv.tui import TUI
+from jnv_cli.olts.datacom_olt import DatacomOLT
+from jnv_cli.olts.fiberhome_olt import FiberhomeOLT
+from jnv_cli.tui import TUI
 
 
 def _open_connection(

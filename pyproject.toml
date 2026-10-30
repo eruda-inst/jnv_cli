@@ -1,5 +1,5 @@
 [project]
-name = "jnv"
+name = "jnv_cli"
 version = "1.0.0"
 description = "Curses-based terminal UI for browsing OLT slots and PONs and inspecting ONU/PON alarms on Datacom (SSH) and Fiberhome (Telnet) OLTs."
 readme = "README.md"
@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-jnv = "jnv.main:run"
+jnv_cli = "jnv_cli.main:run"
 
 [build-system]
 requires = ["uv_build>=0.12.23,<0.13.0"]
