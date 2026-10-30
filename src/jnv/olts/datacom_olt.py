@@ -15,11 +15,11 @@ class ONUDatacom(TypedDict):
 
 class DatacomOLT:
     OLT_SSH_HOSTNAMES: ClassVar[dict[str, str]] = {
-        "OLT ITAITU": settings.olt_itaitu_hostname,
-        "OLT JAC 3": settings.olt_jac_3_hostname,
-        "OLT LAJES": settings.olt_lajes_hostname,
-        "OLT PALMEIRINHA": settings.olt_palmeirinha_hostname,
-        "OLT PARAÍSO": settings.olt_paraiso_hostname,
+        "OLT de Itaitú": settings.olt_itaitu_hostname,
+        "OLT de Jacobina III": settings.olt_jac_3_hostname,
+        "OLT de Lajes do Batata": settings.olt_lajes_hostname,
+        "OLT de Palmeirinha": settings.olt_palmeirinha_hostname,
+        "OLT de Paraíso": settings.olt_paraiso_hostname,
     }
 
     def __init__(self, ssh_client: SSHClient) -> None:

@@ -4,7 +4,7 @@ from collections.abc import Sequence
 from .constants import CREDITS, TITLE
 
 
-class UI:
+class TUI:
     def __init__(self, stdscr: curses.window) -> None:
         self.stdscr = stdscr
         curses.init_color(curses.COLOR_BLUE, 0, 0, 255)

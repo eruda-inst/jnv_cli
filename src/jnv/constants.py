@@ -1,9 +1,9 @@
-TITLE: str = "JNV (Jacobina Network Viewer) v1.5.1"
-CREDITS: str = "Desenvolvido pelo setor de inovação da Newnet"
+TITLE = "JNV (Jacobina Network Viewer) v1.5.2"
+CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 
-COMMANDS: list[str] = ["Consultar alarmes das ONUs", "Consultar alarmes da PON"]
+COMMANDS = ("Consultar alarmes das ONUs", "Consultar alarmes da PON")
 
-ALARM_FILTERS: list[tuple[str | None, str]] = [
+ALARM_FILTERS = [
     (None, "Todas as ONUs"),
     ("GPON_DGi", "ONUs com perda de energia (Dying Gasp)"),
     ("GPON_LOSi", "ONUs com perda de sinal (LOS)"),
@@ -11,7 +11,7 @@ ALARM_FILTERS: list[tuple[str | None, str]] = [
     ("GPON_LOAMi", "ONUs com perda de PLOAM (PLOAM Loss)"),
 ]
 
-ALARM_FILTERS_FIBERHOME: list[tuple[str | None, str]] = [
+ALARM_FILTERS_FIBERHOME = [
     (None, "Todas as ONUs"),
     ("Active", "ONUs sem alarmes"),
     ("Inactive", "ONUs inativas (LOS ou Dying Gasp)"),
@@ -20,14 +20,14 @@ ALARM_FILTERS_FIBERHOME: list[tuple[str | None, str]] = [
 ]
 
 
-OLTS: dict[str, list[str]] = {
-    "OLT ACIJA": [f"SLOT {i:03d}" for i in range(1, 4 + 1)],
-    "OLT ITAITU": [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
-    "OLT JAC 3": [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
-    "OLT LAJES": [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
-    "OLT NEWNET": [f"SLOT {i:03d}" for i in range(1, 7 + 1)],
-    "OLT PALMEIRINHA": [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
-    "OLT PARAÍSO": [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
+OLTS = {
+    "OLT de Acija": [f"SLOT {i:03d}" for i in range(1, 4 + 1)],
+    "OLT de Itaitú": [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
+    "OLT de Jacobina III": [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
+    "OLT de Lajes do Batata": [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
+    "OLT de Newnet": [f"SLOT {i:03d}" for i in range(1, 7 + 1)],
+    "OLT de Palmeirinha": [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
+    "OLT de Paraíso": [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
 }
 
 
@@ -35,15 +35,17 @@ def _pons(count: int) -> list[str]:
     return [f"PON {i:03d}" for i in range(1, count + 1)]
 
 
-OLT_PONS: dict[str, dict[str, list[str]]] = {
-    "OLT ACIJA": {slot: _pons(16) for slot in OLTS["OLT ACIJA"]},
-    "OLT ITAITU": {slot: _pons(8) for slot in OLTS["OLT ITAITU"]},
-    "OLT JAC 3": {slot: _pons(16) for slot in OLTS["OLT JAC 3"]},
-    "OLT LAJES": {slot: _pons(16) for slot in OLTS["OLT LAJES"]},
-    "OLT NEWNET": {
-        **{slot: _pons(8) for slot in OLTS["OLT NEWNET"][:3]},
-        **{slot: _pons(16) for slot in OLTS["OLT NEWNET"][3:]},
+OLT_PONS = {
+    "OLT de Acija": {slot: _pons(16) for slot in OLTS["OLT de Acija"]},
+    "OLT de Itaitú": {slot: _pons(8) for slot in OLTS["OLT de Itaitú"]},
+    "OLT de Jacobina III": {slot: _pons(16) for slot in OLTS["OLT de Jacobina III"]},
+    "OLT de Lajes do Batata": {
+        slot: _pons(16) for slot in OLTS["OLT de Lajes do Batata"]
     },
-    "OLT PALMEIRINHA": {slot: _pons(8) for slot in OLTS["OLT PALMEIRINHA"]},
-    "OLT PARAÍSO": {slot: _pons(16) for slot in OLTS["OLT PARAÍSO"]},
+    "OLT de Newnet": {
+        **{slot: _pons(8) for slot in OLTS["OLT de Newnet"][:3]},
+        **{slot: _pons(16) for slot in OLTS["OLT de Newnet"][3:]},
+    },
+    "OLT de Palmeirinha": {slot: _pons(8) for slot in OLTS["OLT de Palmeirinha"]},
+    "OLT de Paraíso": {slot: _pons(16) for slot in OLTS["OLT de Paraíso"]},
 }

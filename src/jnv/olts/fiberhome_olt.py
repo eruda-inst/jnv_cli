@@ -12,11 +12,11 @@ class ONUFiberhome(TypedDict):
 
 
 class FiberhomeOLT:
-    TELNET_OLTS: ClassVar[frozenset[str]] = frozenset({"OLT ACIJA", "OLT NEWNET"})
+    TELNET_OLTS: ClassVar[frozenset[str]] = frozenset({"OLT de Acija", "OLT de Newnet"})
 
     OLT_TELNET_HOSTNAMES: ClassVar[dict[str, str]] = {
-        "OLT ACIJA": settings.olt_acija_hostname,
-        "OLT NEWNET": settings.olt_newnet_hostname,
+        "OLT de Acija": settings.olt_acija_hostname,
+        "OLT de Newnet": settings.olt_newnet_hostname,
     }
 
     def __init__(self, telnet_client: TelnetClient) -> None:
