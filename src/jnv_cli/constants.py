@@ -1,14 +1,33 @@
-TITLE = "JNV (Jacobina Network Viewer) v1.5.3"
+TITLE = "JNV (Jacobina Network Viewer) v1.7.1"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 
 COMMANDS = ("Consultar alarmes das ONUs", "Consultar alarmes da PON")
+
 
 ALARM_FILTERS = [
     (None, "Todas as ONUs"),
     ("GPON_DGi", "ONUs com perda de energia (Dying Gasp)"),
     ("GPON_LOSi", "ONUs com perda de sinal (LOS)"),
-    ("GPON_LOFi", "ONUs com perda de quadro (LOF)"),
-    ("GPON_LOAMi", "ONUs com perda de PLOAM (PLOAM Loss)"),
+    ("GPON_DFi", "ONUs com falha de desativação (DFi)"),
+    ("GPON_DOWi", "ONUs com deslocamento da janela (DOWi)"),
+    ("GPON_LCDGi", "ONUs com perda do delineamento do canal GEM (LCDGi)"),
+    ("GPON_LOAi", "ONUs com perda de reconhecimento (LOAi)"),
+    ("GPON_LOAMi", "ONUs com perda de PLOAM (LOAMi)"),
+    ("GPON_LOBi", "ONUs com perda de rajada (LOBi)"),
+    ("GPON_LOFi", "ONUs com perda de frame (LOFi)"),
+    ("GPON_LOOCi", "ONUs com perda do canal OMCC (LOOCi)"),
+    ("GPON_LOPCi", "ONUs com perda do canal PLOAM (LOPCi)"),
+    ("GPON_MISi", "ONUs com incompatibilidade de link (MISi)"),
+    ("GPON_ONU_AUTO_PROV_FAIL", "ONUs com falha no provisionamento automático"),
+    ("GPON_ONU_DOWN", "ONUs inativas ou desconectadas do link PON"),
+    ("GPON_ONU_EQUIP_FAILURE", "ONUs com falha interna/defeito de equipamento"),
+    ("GPON_ONU_PASSWORD_MISMATCH", "ONUs com incompatibilidade de senha"),
+    ("GPON_ONU_SELF_TEST_FAILURE", "ONUs com falha no autoteste"),
+    ("GPON_PEEi", "ONUs com erro de equipamento físico (PEEi)"),
+    ("GPON_RDIi", "ONUs com indicação remota de defeito (RDIi)"),
+    ("GPON_SDi", "ONUs com sinal degradado (SDi)"),
+    ("GPON_SFi", "ONUs com falha de sinal (SFi)"),
+    ("GPON_SUFi", "ONUs com falha de inicialização (SUFi)"),
 ]
 
 ALARM_FILTERS_FIBERHOME = [

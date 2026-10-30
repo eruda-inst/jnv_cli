@@ -236,7 +236,7 @@ def main(stdscr: curses.window) -> None:
                                             f"{filter_code}"
                                         ),
                                         lines=[
-                                            "Nenhuma ONU nesta PON com o filtro '{filter_code}'."
+                                            f"Nenhuma ONU nesta PON com o filtro '{filter_code}'."
                                         ],
                                     )
                                     continue
