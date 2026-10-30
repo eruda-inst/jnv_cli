@@ -138,3 +138,46 @@ class TUI:
                 top = min(max_top, top + 1)
             else:
                 return
+
+    def ask_input(
+        self,
+        question: str,
+        context: Sequence[str] | None = None,
+    ) -> str | None:
+        buffer: list[str] = []
+        instructions = "(Enter confirmar, q cancelar)"
+
+        while True:
+            _, w = self._prepare_screen()
+
+            self.stdscr.addstr(1, max(0, (w - len(TITLE)) // 2), TITLE)
+            self.stdscr.addstr(
+                2, max(0, (w - len(CREDITS)) // 2), CREDITS, curses.A_DIM
+            )
+
+            if context:
+                for i, line in enumerate(context):
+                    self.stdscr.addstr(3 + i, 2, line, curses.A_DIM)
+
+            y_question = 4 + (len(context) if context else 0)
+            self.stdscr.addstr(y_question, 2, question)
+
+            y_input = y_question + 2
+            self.stdscr.addstr(y_input, 2, "> " + "".join(buffer))
+            self.stdscr.addstr(y_input + 1, 2, instructions, curses.A_DIM)
+            self.stdscr.refresh()
+
+            key = self.stdscr.getch()
+
+            if key == 27:  # Esc
+                return None
+            if key in (10, 13, curses.KEY_ENTER):
+                return "".join(buffer)
+            if key in (curses.KEY_BACKSPACE, 8, 127):
+                if buffer:
+                    buffer.pop()
+                continue
+            if key == ord("q") and not buffer:
+                return None
+            if 32 <= key <= 126:
+                buffer.append(chr(key))

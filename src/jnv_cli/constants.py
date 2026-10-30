@@ -1,11 +1,13 @@
-TITLE = "JNV (Jacobina Network Viewer) v1.7.2"
+TITLE = "JNV (Jacobina Network Viewer) v1.7.3"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 
 COMMANDS = ("Consultar alarmes das ONUs", "Consultar alarmes da PON")
 
+SERIAL_FILTER_SENTINEL = "__SN__"
 
 ALARM_FILTERS = [
     (None, "Todas as ONUs"),
+    (SERIAL_FILTER_SENTINEL, "Digite o serial number da ONU"),
     ("GPON_DGi", "ONUs com perda de energia (Dying Gasp)"),
     ("GPON_LOSi", "ONUs com perda de sinal (LOS)"),
     ("GPON_DFi", "ONUs com falha de desativação (DFi)"),
