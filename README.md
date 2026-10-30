@@ -82,5 +82,5 @@ uv sync
 6. **Run**
 
 ```sh
-uv run jnv
+uv run jnv_cli
 ```
