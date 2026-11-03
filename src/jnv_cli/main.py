@@ -168,7 +168,11 @@ def main(stdscr: curses.window) -> None:
                             continue
 
                         tui.show_loading(context=ctx_base)
-                        onus = selected_olt.get_onus(pon=pon_label)
+                        if isinstance(selected_olt, DatacomOLT):
+                            onus = selected_olt.get_onus(pon=pon_label)
+                        else:
+                            onus = selected_olt.get_onus(slot=slot_label, pon=pon_label)
+
                         if not onus:
                             tui.show_result(
                                 title=(
@@ -361,7 +365,7 @@ def main(stdscr: curses.window) -> None:
                                             f"{filter_label}"
                                         ),
                                         lines=[
-                                            "Nenhuma ONU nesta PON com o filtro '{filter_code}'."
+                                            f"Nenhuma ONU nesta PON com o filtro '{filter_code}'."
                                         ],
                                     )
                                     continue
@@ -394,6 +398,7 @@ def main(stdscr: curses.window) -> None:
                                         pon=pon_label,
                                         onu=onu["id"],
                                     )
+
                                     tui.show_result(
                                         title=(
                                             f"{command_label} — {olt_label} / "
