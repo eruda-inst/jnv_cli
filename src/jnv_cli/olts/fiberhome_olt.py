@@ -108,13 +108,13 @@ class FiberhomeOLT:
     ) -> list[ONUFiberhome]:
         if filter_code is None:
             return onus
-        if filter_code == "Active":
+        if filter_code == "Ativas":
             return [o for o in onus if o["status"].lower() == "active"]
-        if filter_code == "Inactive":
+        if filter_code == "Inativas":
             return [o for o in onus if o["status"].lower() == "inactive"]
-        if filter_code == "Link loss":
+        if filter_code == "Com perda de sinal":
             return [o for o in onus if o["status"].lower() == "link loss"]
-        if filter_code == "Power down":
+        if filter_code == "Com perda de energia":
             return [o for o in onus if o["status"].lower() == "power down"]
         return onus
 
