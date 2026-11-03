@@ -76,7 +76,7 @@ class FiberhomeOLT:
 
         for raw_line in raw_lines:
             pattern = re.compile(
-                r"SLOT\s+\d+\s+PON\s+\d+\s+ONU\s+\d+\s+status\s+:\s+\w+\s?\w+."
+                pattern=r"SLOT\s+\d+\s+PON\s+\d+\s+ONU\s+\d+\s+status\s+:\s+\w+\s?\w+."
             )
             match = re.match(pattern=pattern, string=raw_line)
 
@@ -86,7 +86,12 @@ class FiberhomeOLT:
 
                 parts = result.split()
                 onu_id = int(parts[5])
-                onu_status = parts[8]
+
+                onu_status = "---"
+                pattern = re.compile(pattern=r"power down|inactive|active|link loss")
+                match = re.search(pattern=pattern, string=result)
+                if match is not None:
+                    onu_status = match.group()
 
                 onus.append(
                     ONUFiberhome(
