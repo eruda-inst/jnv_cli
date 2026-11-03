@@ -50,44 +50,6 @@ class FiberhomeOLT:
                 return raw
         return str(onu)
 
-    @staticmethod
-    def _is_prompt_or_echo(line: str, commands: list[str]) -> bool:
-        s = line.strip()
-        if not s:
-            return False
-
-        for cmd in commands:
-            cmd_clean = cmd.strip()
-            if s == cmd_clean or s.startswith(cmd_clean):
-                return True
-
-        if re.match(r"^[A-Za-z0-9_\\/.\-]+[#>]$", s):
-            return True
-
-        return (
-            "% Unknown command" in s
-            or "Press any key to continue" in s
-            or "Ctrl+c to stop" in s
-            or "can not find the dir" in s
-            or "Command executes failed" in s
-            or 'You can input "dir"' in s
-            or "to go to father dir" in s
-            or "Connected to" in s
-            or "force exit telnet" in s
-            or "Press Ctrl-Q or Ctrl-Y" in s
-        )
-
-    def _run_telnet_commands(self, commands: list[str]) -> list[str]:
-        output_lines: list[str] = []
-
-        for command in commands:
-            res = self.telnet_client.send_command(command)
-            for line in res.splitlines():
-                if line.strip() and not self._is_prompt_or_echo(line, commands):
-                    output_lines.append(line.strip().removesuffix("."))
-
-        return output_lines or ["(Sem saída ou sem alarmes registrados)"]
-
     @classmethod
     def is_telnet_olt(cls, olt: str) -> bool:
         return olt in cls.TELNET_OLTS
@@ -102,21 +64,29 @@ class FiberhomeOLT:
     ) -> list[ONUFiberhome]:
         slot_num = self._slot_number(slot)
         pon_num = self._pon_number(pon)
-        cmds = ["cd /", "cd onu", f"show onu_state slot {slot_num} pon {pon_num}"]
-        lines = self._run_telnet_commands(commands=cmds)
 
-        onus: list[ONUFiberhome] = []
-        for line in lines:
-            if "status" not in line or ":" not in line:
-                continue
+        output = self.telnet_client.send_command(command="cd /")
+        output = self.telnet_client.send_command(command="cd onu")
+        output = self.telnet_client.send_command(
+            command=f"show onu_state slot {slot_num} pon {pon_num}"
+        )
 
-            parts = line.split()
-            if len(parts) < 9:
-                continue
+        raw_lines = output.splitlines()
+        onus = []
 
-            try:
+        for raw_line in raw_lines:
+            pattern = re.compile(
+                r"SLOT\s+\d+\s+PON\s+\d+\s+ONU\s+\d+\s+status\s+:\s+\w+\s?\w+."
+            )
+            match = re.match(pattern=pattern, string=raw_line)
+
+            if match is not None:
+                raw_result = match.group()
+                result = raw_result.strip().removesuffix(".")
+
+                parts = result.split()
                 onu_id = int(parts[5])
-                onu_status = line.split(":", 1)[1].strip().removesuffix(".")
+                onu_status = parts[8]
 
                 onus.append(
                     ONUFiberhome(
@@ -125,10 +95,8 @@ class FiberhomeOLT:
                         status=onu_status,
                     )
                 )
-            except ValueError, IndexError:
-                continue
 
-        return onus
+        return onus if len(onus) else ["(Sem alarmes)"]
 
     def filter_onus(
         self, onus: list[ONUFiberhome], filter_code: str | None
@@ -148,12 +116,28 @@ class FiberhomeOLT:
     def run_pon_alarms(self, slot: str = "SLOT 001", pon: str = "PON 001") -> list[str]:
         slot_number = self._slot_number(slot)
         pon_number = self._pon_number(pon)
-        commands = [
-            "cd /",
-            "cd onu",
-            f"show onu_state slot {slot_number} pon {pon_number}",
-        ]
-        return self._run_telnet_commands(commands=commands)
+
+        output = self.telnet_client.send_command("cd /")
+        output = self.telnet_client.send_command("cd onu")
+        output = self.telnet_client.send_command(
+            f"show onu_state slot {slot_number} pon {pon_number}"
+        )
+
+        raw_lines = output.splitlines()
+        alarms = []
+
+        for raw_line in raw_lines:
+            pattern = re.compile(
+                r"SLOT\s+\d+\s+PON\s+\d+\s+ONU\s+\d+\s+status\s+:\s+\w+\s?\w+."
+            )
+            match = re.match(pattern=pattern, string=raw_line)
+
+            if match is not None:
+                raw_result = match.group()
+                result = raw_result.strip().removesuffix(".")
+                alarms.append(result)
+
+        return alarms if len(alarms) else ["(Sem alarmes)"]
 
     def run_onu_alarms(
         self, slot: str = "SLOT 001", pon: str = "PON 001", onu: int | str = 1
@@ -162,11 +146,25 @@ class FiberhomeOLT:
         pon_num = self._pon_number(pon)
         onu_num = self._onu_number(onu)
 
-        commands = [
-            "cd /",
-            "cd maintenance",
-            "cd alarm",
-            f"show alarm current obj 1/{slot_num}/{pon_num}/{onu_num}",
-        ]
+        output = self.telnet_client.send_command("cd /")
+        output = self.telnet_client.send_command("cd maintenance")
+        output = self.telnet_client.send_command("cd alarm")
+        output = self.telnet_client.send_command(
+            f"show alarm current obj 1/{slot_num}/{pon_num}/{onu_num}"
+        )
 
-        return self._run_telnet_commands(commands=commands)
+        raw_lines = output.splitlines()
+        alarms = []
+
+        for raw_line in raw_lines:
+            pattern = re.compile(
+                r"\d+\s+[A-Z_]+\s+\d+\s+\d+/\d+/\d+/\d+\s+\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}"
+            )
+            match = re.match(pattern=pattern, string=raw_line)
+
+            if match is not None:
+                raw_result = match.group()
+                result = raw_result.strip()
+                alarms.append(result)
+
+        return alarms if len(alarms) else ["(Sem alarmes)"]
