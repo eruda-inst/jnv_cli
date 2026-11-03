@@ -23,32 +23,10 @@ class FiberhomeOLT:
         self.telnet_client = telnet_client
 
     @staticmethod
-    def _slot_number(slot: str) -> str:
-        raw = slot.rsplit(" ", 1)[-1]
-        if "/" in raw:
-            raw = raw.split("/")[0]
-        try:
-            return str(int(raw))
-        except ValueError:
-            return raw
-
-    @staticmethod
-    def _pon_number(pon: str) -> str:
-        raw = pon.rsplit(" ", 1)[-1]
-        try:
-            return str(int(raw))
-        except ValueError:
-            return raw
-
-    @staticmethod
-    def _onu_number(onu: int | str) -> str:
-        if isinstance(onu, str):
-            raw = onu.rsplit(" ", 1)[-1]
-            try:
-                return str(int(raw))
-            except ValueError:
-                return raw
-        return str(onu)
+    def _numberfy(value: str | int) -> int:
+        if isinstance(value, int):
+            return value
+        return int(value.rsplit(" ", 1)[-1])
 
     @classmethod
     def is_telnet_olt(cls, olt: str) -> bool:
@@ -62,8 +40,8 @@ class FiberhomeOLT:
     def get_onus(
         self, slot: str = "SLOT 001", pon: str = "PON 001"
     ) -> list[ONUFiberhome]:
-        slot_num = self._slot_number(slot)
-        pon_num = self._pon_number(pon)
+        slot_num = self._numberfy(value=slot)
+        pon_num = self._numberfy(value=pon)
 
         output = self.telnet_client.send_command(command="cd /")
         output = self.telnet_client.send_command(command="cd onu")
@@ -119,8 +97,8 @@ class FiberhomeOLT:
         return onus
 
     def run_pon_alarms(self, slot: str = "SLOT 001", pon: str = "PON 001") -> list[str]:
-        slot_number = self._slot_number(slot)
-        pon_number = self._pon_number(pon)
+        slot_number = self._numberfy(value=slot)
+        pon_number = self._numberfy(value=pon)
 
         output = self.telnet_client.send_command("cd /")
         output = self.telnet_client.send_command("cd onu")
@@ -147,9 +125,9 @@ class FiberhomeOLT:
     def run_onu_alarms(
         self, slot: str = "SLOT 001", pon: str = "PON 001", onu: int | str = 1
     ) -> list[str]:
-        slot_num = self._slot_number(slot)
-        pon_num = self._pon_number(pon)
-        onu_num = self._onu_number(onu)
+        slot_num = self._numberfy(value=slot)
+        pon_num = self._numberfy(value=pon)
+        onu_num = self._numberfy(value=onu)
 
         output = self.telnet_client.send_command("cd /")
         output = self.telnet_client.send_command("cd maintenance")
