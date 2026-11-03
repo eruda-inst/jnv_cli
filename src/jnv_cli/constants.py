@@ -1,4 +1,4 @@
-TITLE = "JNV (Jacobina Network Viewer) v1.8.9"
+TITLE = "JNV (Jacobina Network Viewer) v1.9.2"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 
 COMMANDS = ("Consultar alarmes das ONUs", "Consultar alarmes da PON")
@@ -34,10 +34,11 @@ ALARM_FILTERS = [
 
 ALARM_FILTERS_FIBERHOME = [
     (None, "Todas"),
-    ("Ativas", "ONUs sem alarmes"),
-    ("Inativas", "ONUs inativas (LOS ou Dying Gasp)"),
-    ("Com perda de sinal", "ONUs com perda de sinal (LOS)"),
-    ("Com perda de energia", "ONUs com perda de energia (Dying Gasp)"),
+    (SERIAL_FILTER_SENTINEL, "Digite o serial number da ONU"),
+    ("active", "ONUs sem alarmes"),
+    ("inactive", "ONUs inativas (LOS ou Dying Gasp)"),
+    ("link loss", "ONUs com perda de sinal (LOS)"),
+    ("power down", "ONUs com perda de energia (Dying Gasp)"),
 ]
 
 

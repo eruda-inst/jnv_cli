@@ -173,7 +173,7 @@ def main(stdscr: curses.window) -> None:
                         else:
                             onus = selected_olt.get_onus(slot=slot_label, pon=pon_label)
 
-                        if not onus:
+                        if not onus or onus == ["(Sem alarmes)"]:
                             tui.show_result(
                                 title=(
                                     f"{command_label} — {olt_label} / "
@@ -215,11 +215,6 @@ def main(stdscr: curses.window) -> None:
                                 last_filter_idx = idx_filter
 
                                 filter_code, filter_label = ALARM_FILTERS[idx_filter]
-
-                                title_filter: str | None
-                                filter_ctx_line: str
-                                onu_question_suffix: str
-                                no_result_msg: str
 
                                 if filter_code == SERIAL_FILTER_SENTINEL:
                                     serial_input = tui.ask_input(
@@ -325,13 +320,13 @@ def main(stdscr: curses.window) -> None:
                                     (
                                         len(code)
                                         for code, _ in ALARM_FILTERS_FIBERHOME
-                                        if code
+                                        if code and code != SERIAL_FILTER_SENTINEL
                                     ),
                                     default=0,
                                 )
                                 filter_labels = [
                                     label
-                                    if code is None
+                                    if code is None or code == SERIAL_FILTER_SENTINEL
                                     else f"{code.ljust(max_code_len)} — {label}"
                                     for code, label in ALARM_FILTERS_FIBERHOME
                                 ]
@@ -352,34 +347,80 @@ def main(stdscr: curses.window) -> None:
                                     idx_filter
                                 ]
 
-                                filtered_onus = selected_olt.filter_onus(
-                                    onus=onus,  # type: ignore[arg-type]
-                                    filter_code=filter_code,
-                                )
+                                if filter_code == SERIAL_FILTER_SENTINEL:
+                                    serial_input = tui.ask_input(
+                                        question="Digite o serial number da ONU",
+                                        context=ctx_base,
+                                    )
+                                    if serial_input is None or not serial_input.strip():
+                                        continue
+                                    serial_text = serial_input.strip()
+                                    serial_query = serial_text.lower()
+                                    filtered_onus = [
+                                        o
+                                        for o in onus
+                                        if serial_query in o["serial_number"].lower()  # type: ignore
+                                    ]
+                                    title_filter = f'Serial "{serial_text}"'
+                                    filter_ctx_line = f'Serial: "{serial_text}"'
+                                    onu_question_suffix = f'Serial "{serial_text}"'
+                                    no_result_msg = (
+                                        f"Nenhuma ONU nesta PON com serial "
+                                        f"contendo '{serial_text}'."
+                                    )
+
+                                elif filter_code is None:
+                                    filtered_onus = onus
+                                    title_filter = None
+                                    filter_ctx_line = f"Filtro: {filter_label}"
+                                    onu_question_suffix = filter_label
+                                    no_result_msg = "Nenhuma ONU nesta PON."
+
+                                else:
+                                    filtered_onus = selected_olt.filter_onus(
+                                        onus=onus,  # type: ignore[arg-type]
+                                        filter_code=filter_code,
+                                    )
+                                    title_filter = filter_code
+                                    filter_ctx_line = f"Filtro: {filter_label}"
+                                    onu_question_suffix = filter_label
+                                    no_result_msg = (
+                                        f"Nenhuma ONU nesta PON com o filtro "
+                                        f"'{filter_code}'."
+                                    )
 
                                 if not filtered_onus:
+                                    title = (
+                                        f"{command_label} — {olt_label} / "
+                                        f"{slot_label} / {pon_label}"
+                                    )
+                                    if title_filter:
+                                        title = f"{title} / {title_filter}"
                                     tui.show_result(
-                                        title=(
-                                            f"{command_label} — {olt_label} / "
-                                            f"{slot_label} / {pon_label} / "
-                                            f"{filter_label}"
-                                        ),
-                                        lines=[
-                                            f"Nenhuma ONU nesta PON com o filtro '{filter_code}'."
-                                        ],
+                                        title=title,
+                                        lines=[no_result_msg],
                                     )
                                     continue
 
+                                status_width = max(
+                                    (len(o["status"]) for o in filtered_onus),  # type: ignore
+                                    default=0,
+                                )
                                 labels = [
-                                    selected_olt.get_onu_label(onu=onu)
+                                    selected_olt.get_onu_label(
+                                        onu=onu,  # type: ignore
+                                        status_width=status_width,
+                                    )
                                     for onu in filtered_onus
                                 ]
-                                filter_ctx = ctx_base + [f"Filtro: {filter_label}"]
+                                filter_ctx = ctx_base + [filter_ctx_line]
 
                                 while True:
                                     # --- ONU (Fiberhome) ---
                                     idx_onu = tui.select_menu(
-                                        question=(f"Selecione a ONU — {filter_label}"),
+                                        question=(
+                                            f"Selecione a ONU — {onu_question_suffix}"
+                                        ),
                                         options=labels,
                                         back=True,
                                         context=filter_ctx,

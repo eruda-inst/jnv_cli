@@ -9,6 +9,7 @@ class ONUFiberhome(TypedDict):
     id: int
     label: str
     status: str
+    serial_number: str
 
 
 class FiberhomeOLT:
@@ -32,10 +33,32 @@ class FiberhomeOLT:
     def is_telnet_olt(cls, olt: str) -> bool:
         return olt in cls.TELNET_OLTS
 
-    def get_onu_label(self, onu: ONUFiberhome) -> str:
+    def get_onu_label(self, onu: ONUFiberhome, status_width: int = 0) -> str:
         onu_label = onu["label"]
-        onu_status = onu["status"]
+        onu_status = onu["status"].ljust(status_width)
+        onu_serial_number = onu["serial_number"]
+        if onu_serial_number:
+            return f"{onu_label} — {onu_status} — {onu_serial_number}"
         return f"{onu_label} — {onu_status}"
+
+    def _get_serials(self, slot_num: int, pon_num: int) -> dict[int, str]:
+        self.telnet_client.send_command(command="cd /")
+        self.telnet_client.send_command(command="cd onu")
+        output = self.telnet_client.send_command(
+            command=f"show authorization slot {slot_num} pon {pon_num}"
+        )
+
+        serial_map = {}
+
+        for raw_line in output.splitlines():
+            parts = raw_line.split()
+            if len(parts) < 8 or not parts[0].isdigit():
+                continue
+            onu_id = int(parts[2])
+            serial_number = parts[7]
+            serial_map[onu_id] = serial_number
+
+        return serial_map
 
     def get_onus(
         self, slot: str = "SLOT 001", pon: str = "PON 001"
@@ -43,8 +66,8 @@ class FiberhomeOLT:
         slot_num = self._numberfy(value=slot)
         pon_num = self._numberfy(value=pon)
 
-        output = self.telnet_client.send_command(command="cd /")
-        output = self.telnet_client.send_command(command="cd onu")
+        self.telnet_client.send_command(command="cd /")
+        self.telnet_client.send_command(command="cd onu")
         output = self.telnet_client.send_command(
             command=f"show onu_state slot {slot_num} pon {pon_num}"
         )
@@ -76,8 +99,13 @@ class FiberhomeOLT:
                         id=onu_id,
                         label=f"ONU {onu_id:03d}",
                         status=onu_status,
+                        serial_number="---",
                     )
                 )
+        if onus:
+            serial_map = self._get_serials(slot_num=slot_num, pon_num=pon_num)
+            for onu in onus:
+                onu["serial_number"] = serial_map.get(onu["id"], "---")
 
         return onus if len(onus) else ["(Sem alarmes)"]
 
@@ -86,13 +114,13 @@ class FiberhomeOLT:
     ) -> list[ONUFiberhome]:
         if filter_code is None:
             return onus
-        if filter_code == "Ativas":
+        if filter_code == "active":
             return [o for o in onus if o["status"].lower() == "active"]
-        if filter_code == "Inativas":
+        if filter_code == "inactive":
             return [o for o in onus if o["status"].lower() == "inactive"]
-        if filter_code == "Com perda de sinal":
+        if filter_code == "link loss":
             return [o for o in onus if o["status"].lower() == "link loss"]
-        if filter_code == "Com perda de energia":
+        if filter_code == "power down":
             return [o for o in onus if o["status"].lower() == "power down"]
         return onus
 
@@ -129,9 +157,9 @@ class FiberhomeOLT:
         pon_num = self._numberfy(value=pon)
         onu_num = self._numberfy(value=onu)
 
-        output = self.telnet_client.send_command("cd /")
-        output = self.telnet_client.send_command("cd maintenance")
-        output = self.telnet_client.send_command("cd alarm")
+        self.telnet_client.send_command("cd /")
+        self.telnet_client.send_command("cd maintenance")
+        self.telnet_client.send_command("cd alarm")
         output = self.telnet_client.send_command(
             f"show alarm current obj 1/{slot_num}/{pon_num}/{onu_num}"
         )

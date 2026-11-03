@@ -53,7 +53,7 @@ class DatacomOLT:
         lines = self._run_ssh(command=command)
         lines = lines[2:]
 
-        onus: list[ONUDatacom] = []
+        onus = []
 
         for line in lines:
             onu_id = int(line.split()[1])
@@ -98,8 +98,9 @@ class DatacomOLT:
     def run_onu_alarms(self, pon: str = "PON 001", onu: str = "ONU 000") -> list[str]:
         pon_number = self._numberfy(value=pon)
         onu_number = self._numberfy(value=onu) - 1
-        command = f'show alarm | include "gpon-1/1/{pon_number}/{onu_number} "'
-        return self._run_ssh(command=command)
+        return self._run_ssh(
+            command=f'show alarm | include "gpon-1/1/{pon_number}/{onu_number} "'
+        )
 
     def run_pon_alarms(self, pon: str = "PON 001") -> list[str]:
         pon_number = self._numberfy(value=pon)
