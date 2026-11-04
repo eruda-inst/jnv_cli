@@ -15,8 +15,19 @@ class ONUFiberhome(TypedDict):
 
 
 class FiberhomeOLT:
+    PON_ALARM_RE: ClassVar[re.Pattern[str]] = re.compile(
+        pattern=r"SLOT\s+\d+\s+PON\s+\d+\s+ONU\s+\d+\s+status\s+:\s+\w+\s?\w+."
+    )
+    ONU_ALARM_RE: ClassVar[re.Pattern[str]] = re.compile(
+        pattern=r"\d+\s+[A-Z_]+\s+\d+\s+\d+/\d+/\d+/\d+\s+\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}"
+    )
+    ONU_RE: ClassVar[re.Pattern[str]] = re.compile(
+        pattern=r"\d+\s+\d+\s+\d+\s+(\w+-?\w{0,}-?\w{0,})\s+\w+\s+\d+\s+\w{2}\s+\w{12}"
+    )
+    ONU_STATUS_RE: ClassVar[re.Pattern[str]] = re.compile(
+        pattern=r"active|inactive|power down|link loss"
+    )
     TELNET_OLTS: ClassVar[frozenset[str]] = frozenset({"OLT de Acija", "OLT de Newnet"})
-
     OLT_TELNET_HOSTNAMES: ClassVar[dict[str, str]] = {
         "OLT de Acija": settings.olt_acija_hostname,
         "OLT de Newnet": settings.olt_newnet_hostname,
@@ -34,24 +45,21 @@ class FiberhomeOLT:
     def _get_onu_status(self, slot_num: int, pon_num: int) -> dict[int, str]:
         commands = ["cd /", "cd onu", f"show onu_state slot {slot_num} pon {pon_num}"]
 
-        onu_re = re.compile(
-            pattern=r"SLOT\s+\d+\s+PON\s+\d+\s+ONU\s+\d+\s+status\s+:\s+\w+\s?\w+."
-        )
-        onu_status_re = re.compile(pattern=r"active|inactive|power down|link loss")
         raw_lines = self._run_commands(commands=commands)
 
         status_map = {}
 
         for raw_line in raw_lines:
-            match = re.search(pattern=onu_re, string=raw_line)
+            match = self.PON_ALARM_RE.search(string=raw_line)
+
             if match is not None:
                 raw_result = match.group()
                 result = raw_result.strip().removesuffix(".")
                 parts = result.split()
                 onu_id = int(parts[5])
-                onu_status = NONE_SUBSTITUTE
-                match = re.search(pattern=onu_status_re, string=result)
 
+                onu_status = NONE_SUBSTITUTE
+                match = self.ONU_STATUS_RE.search(string=result)
                 if match is not None:
                     onu_status = match.group()
 
@@ -60,17 +68,15 @@ class FiberhomeOLT:
         return status_map
 
     def _run_commands(self, commands: list[str]) -> list[str]:
-        client = self.telnet_client
+        last_command = commands[0]
 
         if len(commands) > 1:
             last_command = commands[-1]
             commands.pop(-1)
             for command in commands:
-                client.send_command(command=command)
-        else:
-            last_command = commands[0]
+                self.telnet_client.send_command(command=command)
 
-        output = client.send_command(command=last_command)
+        output = self.telnet_client.send_command(command=last_command)
         return output.splitlines()
 
     @classmethod
@@ -103,10 +109,7 @@ class FiberhomeOLT:
         onus = []
 
         for raw_line in raw_lines:
-            pattern = re.compile(
-                pattern=r"\d+\s+\d+\s+\d+\s+(\w+-?\w{0,}-?\w{0,})\s+\w+\s+\d+\s+\w{2}\s+\w{12}"
-            )
-            match = re.search(pattern=pattern, string=raw_line)
+            match = self.ONU_RE.search(string=raw_line)
 
             if match is not None:
                 raw_result = match.group()
@@ -117,8 +120,6 @@ class FiberhomeOLT:
                 onu_id = int(parts[2])
                 onu_status = status_map.get(onu_id, NONE_SUBSTITUTE)
                 onu_serial = parts[7]
-
-                self._get_onu_status(slot_num=slot_num, pon_num=pon_num)
 
                 onus.append(
                     ONUFiberhome(
@@ -136,15 +137,7 @@ class FiberhomeOLT:
     ) -> list[ONUFiberhome]:
         if filter_code is None:
             return onus
-        if filter_code == "active":
-            return [o for o in onus if o["status"].lower() == "active"]
-        if filter_code == "inactive":
-            return [o for o in onus if o["status"].lower() == "inactive"]
-        if filter_code == "link loss":
-            return [o for o in onus if o["status"].lower() == "link loss"]
-        if filter_code == "power down":
-            return [o for o in onus if o["status"].lower() == "power down"]
-        return onus
+        return [onu for onu in onus if onu["status"] == filter_code]
 
     def run_pon_alarms(self, slot: str = "SLOT 001", pon: str = "PON 001") -> list[str]:
         slot_number = self._numberfy(value=slot)
@@ -160,10 +153,7 @@ class FiberhomeOLT:
         alarms = []
 
         for raw_line in raw_lines:
-            pattern = re.compile(
-                pattern=r"SLOT\s+\d+\s+PON\s+\d+\s+ONU\s+\d+\s+status\s+:\s+\w+\s?\w+."
-            )
-            match = re.search(pattern=pattern, string=raw_line)
+            match = self.PON_ALARM_RE.search(string=raw_line)
 
             if match is not None:
                 raw_result = match.group()
@@ -190,10 +180,7 @@ class FiberhomeOLT:
         alarms = []
 
         for raw_line in raw_lines:
-            pattern = re.compile(
-                r"\d+\s+[A-Z_]+\s+\d+\s+\d+/\d+/\d+/\d+\s+\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}"
-            )
-            match = re.search(pattern=pattern, string=raw_line)
+            match = self.ONU_ALARM_RE.search(string=raw_line)
 
             if match is not None:
                 raw_result = match.group()
