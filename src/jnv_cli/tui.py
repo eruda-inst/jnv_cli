@@ -1,7 +1,7 @@
 import curses
 from collections.abc import Sequence
 
-from .constants import CREDITS, TITLE
+from jnv_cli.constants import CREDITS, TITLE
 
 
 class TUI:

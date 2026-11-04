@@ -1,7 +1,11 @@
-TITLE = "JNV (Jacobina Network Viewer) v1.9.3"
+TITLE = "JNV (Jacobina Network Viewer) v1.9.4"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 
 COMMANDS = ("Consultar alarmes das ONUs", "Consultar alarmes da PON")
+
+SEPARATOR = " | "
+
+NONE_SUBSTITUTE = "---"
 
 SERIAL_FILTER_SENTINEL = "__SN__"
 

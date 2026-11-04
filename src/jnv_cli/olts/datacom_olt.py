@@ -1,8 +1,10 @@
 import re
 from typing import ClassVar, TypedDict
 
-from ..clients.ssh_client import SSHClient
-from ..config import settings
+from jnv_cli.clients.ssh_client import SSHClient
+from jnv_cli.config import settings
+from jnv_cli.constants import NONE_SUBSTITUTE
+from jnv_cli.helper import join_values
 
 
 class ONUDatacom(TypedDict):
@@ -45,7 +47,7 @@ class DatacomOLT:
         onu_serial_number = onu["serial_number"]
         onu_state = onu["onu_state"]
         onu_name = onu["onu_name"]
-        return f"{onu_label} — {onu_serial_number} — {onu_state} — {onu_name}"
+        return join_values(values=[onu_label, onu_serial_number, onu_state, onu_name])
 
     def get_onus(self, pon: str = "PON 001") -> list[ONUDatacom]:
         pon_number = self._numberfy(value=pon)
@@ -61,7 +63,7 @@ class DatacomOLT:
             onu_state = line.split()[3]
             onu_state = onu_state.ljust(4)
 
-            onu_name = "---"
+            onu_name = NONE_SUBSTITUTE
 
             if len(line.split()) >= 6:
                 onu_name = line.split()[5]

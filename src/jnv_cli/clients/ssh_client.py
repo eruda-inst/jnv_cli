@@ -1,6 +1,6 @@
 import paramiko
 
-from ..config import settings
+from jnv_cli.config import settings
 
 
 class SSHClient:

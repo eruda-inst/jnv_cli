@@ -10,6 +10,7 @@ from jnv_cli.constants import (
     OLTS,
     SERIAL_FILTER_SENTINEL,
 )
+from jnv_cli.helper import join_values
 from jnv_cli.olts.datacom_olt import DatacomOLT
 from jnv_cli.olts.fiberhome_olt import FiberhomeOLT
 from jnv_cli.tui import TUI
@@ -198,7 +199,9 @@ def main(stdscr: curses.window) -> None:
                                 filter_labels = [
                                     label
                                     if code is None or code == SERIAL_FILTER_SENTINEL
-                                    else f"{code.ljust(max_code_len)} — {label}"
+                                    else join_values(
+                                        values=[code.ljust(max_code_len), label]
+                                    )
                                     for code, label in ALARM_FILTERS
                                 ]
                                 idx_filter = tui.select_menu(
@@ -327,7 +330,9 @@ def main(stdscr: curses.window) -> None:
                                 filter_labels = [
                                     label
                                     if code is None or code == SERIAL_FILTER_SENTINEL
-                                    else f"{code.ljust(max_code_len)} — {label}"
+                                    else join_values(
+                                        values=[code.ljust(max_code_len), label]
+                                    )
                                     for code, label in ALARM_FILTERS_FIBERHOME
                                 ]
                                 idx_filter = tui.select_menu(

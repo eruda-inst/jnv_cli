@@ -1,8 +1,10 @@
 import re
 from typing import ClassVar, TypedDict
 
-from ..clients.telnet_client import TelnetClient
-from ..config import settings
+from jnv_cli.clients.telnet_client import TelnetClient
+from jnv_cli.config import settings
+from jnv_cli.constants import NONE_SUBSTITUTE
+from jnv_cli.helper import join_values
 
 
 class ONUFiberhome(TypedDict):
@@ -47,7 +49,7 @@ class FiberhomeOLT:
                 result = raw_result.strip().removesuffix(".")
                 parts = result.split()
                 onu_id = int(parts[5])
-                onu_status = "---"
+                onu_status = NONE_SUBSTITUTE
                 match = re.search(pattern=onu_status_re, string=result)
 
                 if match is not None:
@@ -80,8 +82,8 @@ class FiberhomeOLT:
         onu_status = onu["status"].ljust(status_width)
         onu_serial_number = onu["serial_number"]
         if onu_serial_number:
-            return f"{onu_label} — {onu_status} — {onu_serial_number}"
-        return f"{onu_label} — {onu_status}"
+            return join_values(values=[onu_label, onu_status, onu_serial_number])
+        return join_values(values=[onu_label, onu_status])
 
     def get_onus(
         self, slot: str = "SLOT 001", pon: str = "PON 001"
@@ -113,7 +115,7 @@ class FiberhomeOLT:
                 parts = result.split()
 
                 onu_id = int(parts[2])
-                onu_status = status_map.get(onu_id, "---")
+                onu_status = status_map.get(onu_id, NONE_SUBSTITUTE)
                 onu_serial = parts[7]
 
                 self._get_onu_status(slot_num=slot_num, pon_num=pon_num)

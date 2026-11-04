@@ -2,7 +2,7 @@ import select
 import socket
 import time
 
-from ..config import settings
+from jnv_cli.config import settings
 
 IAC: bytes = bytes([255])
 DONT: bytes = bytes([254])
