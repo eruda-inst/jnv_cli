@@ -1,4 +1,4 @@
-TITLE = "JNV (Jacobina Network Viewer) v1.9.5"
+TITLE = "JNV (Jacobina Network Viewer) v1.9.6"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 
 COMMANDS = ("Consultar alarmes das ONUs", "Consultar alarmes da PON")

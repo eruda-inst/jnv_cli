@@ -4,7 +4,7 @@ from typing import ClassVar, TypedDict
 from jnv_cli.clients.ssh_client import SSHClient
 from jnv_cli.config import settings
 from jnv_cli.constants import NONE_SUBSTITUTE
-from jnv_cli.helper import join_values
+from jnv_cli.helper import join_values, numberfy
 
 
 class ONUDatacom(TypedDict):
@@ -16,6 +16,10 @@ class ONUDatacom(TypedDict):
 
 
 class DatacomOLT:
+    ONU_RE: ClassVar[re.Pattern[str]] = re.compile(
+        pattern=r"\d+/\d+/\d+\s+\d+\s+\w{12}\s+(Up|Down)\s+\w+\s{0,}\S{0,}"
+    )
+    GPON_INTERFACE_RE: ClassVar[re.Pattern[str]] = re.compile(r"gpon-\d+/\d+/\d+/(\d+)")
     OLT_SSH_HOSTNAMES: ClassVar[dict[str, str]] = {
         "OLT de Itaitú": settings.olt_itaitu_hostname,
         "OLT de Jacobina III": settings.olt_jac_3_hostname,
@@ -27,13 +31,7 @@ class DatacomOLT:
     def __init__(self, ssh_client: SSHClient) -> None:
         self.ssh_client = ssh_client
 
-    @staticmethod
-    def _numberfy(value: str | int) -> int:
-        if isinstance(value, int):
-            return value
-        return int(value.rsplit(" ", 1)[-1])
-
-    def _run_ssh(self, command: str) -> list[str]:
+    def _run_command(self, command: str) -> list[str]:
         self.ssh_client.execute_command(command=command)
         stdout = self.ssh_client.get_stdout()
         return stdout.splitlines() or ["(Sem alarmes)"]
@@ -50,33 +48,39 @@ class DatacomOLT:
         return join_values(values=[onu_label, onu_serial_number, onu_state, onu_name])
 
     def get_onus(self, pon: str = "PON 001") -> list[ONUDatacom]:
-        pon_number = self._numberfy(value=pon)
+        pon_number = numberfy(value=pon)
         command = f"show interface gpon 1/1/{pon_number} onu"
-        lines = self._run_ssh(command=command)
-        lines = lines[2:]
 
+        raw_lines = self._run_command(command=command)
         onus = []
 
-        for line in lines:
-            onu_id = int(line.split()[1])
-            onu_serial_number = line.split()[2]
-            onu_state = line.split()[3]
-            onu_state = onu_state.ljust(4)
+        for raw_line in raw_lines:
+            line = raw_line.strip()
+            match = self.ONU_RE.search(string=line)
 
-            onu_name = NONE_SUBSTITUTE
+            if match is not None:
+                result_raw = match.group()
+                result = result_raw.strip()
 
-            if len(line.split()) >= 6:
-                onu_name = line.split()[5]
+                parts = result.split()
 
-            onus.append(
-                ONUDatacom(
-                    id=onu_id + 1,
-                    label=f"ONU {onu_id:03d}",
-                    serial_number=onu_serial_number,
-                    onu_state=onu_state,
-                    onu_name=onu_name,
+                onu_id = int(parts[1])
+                onu_serial_number = parts[2]
+                onu_state = parts[3].ljust(4)
+                onu_name = NONE_SUBSTITUTE
+
+                if len(parts) >= 6:
+                    onu_name = parts[5]
+
+                onus.append(
+                    ONUDatacom(
+                        id=onu_id + 1,
+                        label=f"ONU {onu_id:03d}",
+                        serial_number=onu_serial_number,
+                        onu_state=onu_state,
+                        onu_name=onu_name,
+                    )
                 )
-            )
 
         return onus
 
@@ -84,26 +88,24 @@ class DatacomOLT:
         self, alarm_lines: list[str], alarm_code: str
     ) -> set[int]:
         onu_ids: set[int] = set()
-
         code_re = re.compile(rf"\b{re.escape(alarm_code)}\b")
-        gpon_interface_re = re.compile(r"gpon-\d+/\d+/\d+/(\d+)")
 
         for line in alarm_lines:
-            if not code_re.search(line):
+            if not code_re.search(string=line):
                 continue
-            match = gpon_interface_re.search(line)
+            match = self.GPON_INTERFACE_RE.search(string=line)
             if match:
                 onu_ids.add(int(match.group(1)))
 
         return onu_ids
 
     def run_onu_alarms(self, pon: str = "PON 001", onu: str = "ONU 000") -> list[str]:
-        pon_number = self._numberfy(value=pon)
-        onu_number = self._numberfy(value=onu) - 1
-        return self._run_ssh(
-            command=f'show alarm | include "gpon-1/1/{pon_number}/{onu_number} "'
-        )
+        pon_number = numberfy(value=pon)
+        onu_number = numberfy(value=onu) - 1
+        command = f'show alarm | include "gpon-1/1/{pon_number}/{onu_number} "'
+        return self._run_command(command=command)
 
     def run_pon_alarms(self, pon: str = "PON 001") -> list[str]:
-        pon_number = self._numberfy(value=pon)
-        return self._run_ssh(command=f"show alarm | include 1/1/{pon_number}/")
+        pon_number = numberfy(value=pon)
+        command = f"show alarm | include 1/1/{pon_number}/"
+        return self._run_command(command=command)

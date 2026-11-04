@@ -4,7 +4,7 @@ from typing import ClassVar, TypedDict
 from jnv_cli.clients.telnet_client import TelnetClient
 from jnv_cli.config import settings
 from jnv_cli.constants import NONE_SUBSTITUTE
-from jnv_cli.helper import join_values
+from jnv_cli.helper import join_values, numberfy
 
 
 class ONUFiberhome(TypedDict):
@@ -35,12 +35,6 @@ class FiberhomeOLT:
 
     def __init__(self, telnet_client: TelnetClient) -> None:
         self.telnet_client = telnet_client
-
-    @staticmethod
-    def _numberfy(value: str | int) -> int:
-        if isinstance(value, int):
-            return value
-        return int(value.rsplit(" ", 1)[-1])
 
     def _get_onu_status(self, slot_num: int, pon_num: int) -> dict[int, str]:
         commands = ["cd /", "cd onu", f"show onu_state slot {slot_num} pon {pon_num}"]
@@ -94,8 +88,8 @@ class FiberhomeOLT:
     def get_onus(
         self, slot: str = "SLOT 001", pon: str = "PON 001"
     ) -> list[ONUFiberhome]:
-        slot_num = self._numberfy(value=slot)
-        pon_num = self._numberfy(value=pon)
+        slot_num = numberfy(value=slot)
+        pon_num = numberfy(value=pon)
 
         commands = [
             "cd /",
@@ -140,8 +134,8 @@ class FiberhomeOLT:
         return [onu for onu in onus if onu["status"] == filter_code]
 
     def run_pon_alarms(self, slot: str = "SLOT 001", pon: str = "PON 001") -> list[str]:
-        slot_number = self._numberfy(value=slot)
-        pon_number = self._numberfy(value=pon)
+        slot_number = numberfy(value=slot)
+        pon_number = numberfy(value=pon)
 
         commands = [
             "cd /",
@@ -165,9 +159,9 @@ class FiberhomeOLT:
     def run_onu_alarms(
         self, slot: str = "SLOT 001", pon: str = "PON 001", onu: int | str = 1
     ) -> list[str]:
-        slot_num = self._numberfy(value=slot)
-        pon_num = self._numberfy(value=pon)
-        onu_num = self._numberfy(value=onu)
+        slot_num = numberfy(value=slot)
+        pon_num = numberfy(value=pon)
+        onu_num = numberfy(value=onu)
 
         commands = [
             "cd /",
