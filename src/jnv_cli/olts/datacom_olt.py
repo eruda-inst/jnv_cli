@@ -4,7 +4,7 @@ from typing import ClassVar, TypedDict
 from jnv_cli.clients.ssh_client import SSHClient
 from jnv_cli.config import settings
 from jnv_cli.constants import NONE_SUBSTITUTE
-from jnv_cli.helper import join_values, numberfy
+from jnv_cli.utils import join_values, numberfy
 
 
 class ONUDatacom(TypedDict):

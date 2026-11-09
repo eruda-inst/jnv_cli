@@ -10,10 +10,10 @@ from jnv_cli.constants import (
     OLTS,
     SERIAL_FILTER_SENTINEL,
 )
-from jnv_cli.helper import join_values
 from jnv_cli.olts.datacom_olt import DatacomOLT
 from jnv_cli.olts.fiberhome_olt import FiberhomeOLT
 from jnv_cli.tui import TUI
+from jnv_cli.utils import join_values, logger
 
 
 def _open_connection(
@@ -466,8 +466,10 @@ def main(stdscr: curses.window) -> None:
 def run() -> None:
     try:
         curses.wrapper(main)
+    except ConnectionResetError:
+        logger.error(msg="Conexão encerrada por ociosidade.")
     except KeyboardInterrupt:
-        print("Programa encerrado.")
+        logger.info(msg="Programa encerrado pelo usuário.")
 
 
 if __name__ == "__main__":

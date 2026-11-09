@@ -4,7 +4,7 @@ from typing import ClassVar, TypedDict
 from jnv_cli.clients.telnet_client import TelnetClient
 from jnv_cli.config import settings
 from jnv_cli.constants import NONE_SUBSTITUTE
-from jnv_cli.helper import join_values, numberfy
+from jnv_cli.utils import join_values, numberfy
 
 
 class ONUFiberhome(TypedDict):
@@ -98,6 +98,7 @@ class FiberhomeOLT:
         ]
 
         raw_lines = self._run_commands(commands=commands)
+
         status_map = self._get_onu_status(slot_num=slot_num, pon_num=pon_num)
 
         onus = []

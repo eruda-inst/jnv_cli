@@ -28,6 +28,11 @@ class TelnetClient:
 
         self.connect()
 
+        self.send_command(command="/")
+        self.send_command(command="cd service")
+        self.send_command(command="idle-timeout 35791")  # Max: 35791
+        self.send_command(command="terminal length 0")  # 0 or auto
+
     def connect(self) -> None:
         self._socket = socket.create_connection(
             address=(self.hostname, self.port), timeout=self.timeout
@@ -35,16 +40,12 @@ class TelnetClient:
 
         self._read_until(match=["Login:", "login:"])
         self._write(data=f"{self.username}\r\n")
-
         self._read_until(match=["Password:", "password:"])
         self._write(data=f"{self.password}\r\n")
-
         self._read_until(match=["User>", ">"])
         self._write(data="EN\r\n")
-
         self._read_until(match=["Password:", "password:"])
         self._write(data=f"{self.password}\r\n")
-
         self._read_until(match=["Admin#", "#"])
 
     def close(self) -> None:
@@ -57,12 +58,9 @@ class TelnetClient:
                 self._socket.close()
                 self._socket = None
 
-    def send_command(
-        self, command: str, expected_prompts: list[str] | None = None
-    ) -> str:
-        prompts = expected_prompts or ["#", ">"]
+    def send_command(self, command: str) -> str:
         self._write(data=f"{command.strip()}\r\n")
-        return self._read_until(match=prompts)
+        return self._read_until(match=["#", ">"])
 
     def _write(self, data: str) -> None:
         if self._socket is None:
@@ -70,18 +68,12 @@ class TelnetClient:
         self._socket.sendall(data.encode("utf-8"))
 
     def _read_until(self, match: str | list[str], timeout: float | None = None) -> str:
-        if self._socket is None:
-            return ""
-
         targets = [match] if isinstance(match, str) else match
         read_timeout = timeout if timeout is not None else self.timeout
-        start_time = time.time()
+        deadline = time.time() + read_timeout
         buffer = bytearray()
 
-        while True:
-            if time.time() - start_time > read_timeout:
-                break
-
+        while time.time() <= deadline:
             rlist, _, _ = select.select([self._socket], [], [], 0.1)
             if not rlist:
                 continue
@@ -92,12 +84,6 @@ class TelnetClient:
 
             buffer.extend(self._clean_iac_bytes(chunk))
             text_decoded = buffer.decode(encoding="utf-8", errors="replace")
-
-            lines = text_decoded.strip().splitlines()
-            last_line = lines[-1] if lines else ""
-            if "Press any key to continue" in last_line:
-                self._write(" ")
-                start_time = time.time()
 
             if any(target in text_decoded for target in targets):
                 return text_decoded
