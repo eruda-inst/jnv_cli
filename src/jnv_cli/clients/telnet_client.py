@@ -85,7 +85,7 @@ class TelnetClient:
     def send_command(self, command: str) -> str:
         with self._lock:
             if self._stop.is_set():
-                raise ConnectionResetError("TelnetClient has been closed")
+                raise ConnectionResetError("TelnetClient foi fechado")
 
             if self._socket is None:
                 # Socket was marked dead by the keepalive or a previous
@@ -131,7 +131,6 @@ class TelnetClient:
             self._start_keepalive_locked()
 
     def _mark_dead_locked(self) -> None:
-        """Close the socket and clear the reference. Caller holds the lock."""
         sock = self._socket
         self._socket = None
         if sock is not None:
@@ -152,7 +151,7 @@ class TelnetClient:
                     # will reconnect on the next user action.
                     return
                 try:
-                    self._write(data="show clock\r\n")
+                    self._write(data="show hostname\r\n")
                     self._read_until(match=["#", ">"], timeout=5)
                 except _RETRYABLE_ERRORS:
                     # Mark the socket dead so the next send_command knows
@@ -182,7 +181,7 @@ class TelnetClient:
 
     def _write(self, data: str) -> None:
         if self._socket is None:
-            raise ConnectionResetError("Telnet session is closed")
+            raise ConnectionResetError("Sessão Telnet está fechada")
         self._socket.sendall(data.encode("utf-8"))
 
     def _write_raw(self, raw_bytes: bytes) -> None:
@@ -204,7 +203,7 @@ class TelnetClient:
         while time.time() <= deadline:
             sock = self._socket
             if sock is None:
-                raise ConnectionResetError("Telnet session is closed")
+                raise ConnectionResetError("Sessão Telnet está fechada")
 
             rlist, _, _ = select.select([sock], [], [], 0.1)
             if not rlist:
@@ -213,7 +212,7 @@ class TelnetClient:
             chunk = sock.recv(4096)
             if not chunk:
                 # Peer sent EOF: the session is dead.
-                raise ConnectionResetError("Telnet session closed by peer")
+                raise ConnectionResetError("Sessão Telnet fechada")
 
             buffer.extend(self._clean_iac_bytes(chunk))
             text_decoded = buffer.decode(encoding="utf-8", errors="replace")
