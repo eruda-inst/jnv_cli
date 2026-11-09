@@ -151,7 +151,7 @@ class TelnetClient:
                     # will reconnect on the next user action.
                     return
                 try:
-                    self._write(data="show hostname\r\n")
+                    self._write(data="help\r\n")
                     self._read_until(match=["#", ">"], timeout=5)
                 except _RETRYABLE_ERRORS:
                     # Mark the socket dead so the next send_command knows
