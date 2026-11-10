@@ -1,5 +1,6 @@
 import re
-from typing import ClassVar, TypedDict
+from dataclasses import dataclass
+from typing import ClassVar
 
 from jnv_cli.clients.ssh_client import SSHClient
 from jnv_cli.config import settings
@@ -7,12 +8,13 @@ from jnv_cli.constants import NONE_SUBSTITUTE
 from jnv_cli.utils import join_values, numberfy
 
 
-class ONUDatacom(TypedDict):
+@dataclass
+class ONUDatacom:
     id: int
     label: str
+    status: str
     serial_number: str
-    onu_state: str
-    onu_name: str
+    name: str
 
 
 class DatacomOLT:
@@ -41,11 +43,11 @@ class DatacomOLT:
         return olt in cls.OLT_SSH_HOSTNAMES
 
     def get_onu_label(self, onu: ONUDatacom) -> str:
-        onu_label = onu["label"]
-        onu_serial_number = onu["serial_number"]
-        onu_state = onu["onu_state"]
-        onu_name = onu["onu_name"]
-        return join_values(values=[onu_label, onu_serial_number, onu_state, onu_name])
+        onu_label = onu.label
+        onu_serial_number = onu.serial_number
+        status = onu.status
+        name = onu.name
+        return join_values(values=[onu_label, onu_serial_number, status, name])
 
     def get_onus(self, pon: str = "PON 001") -> list[ONUDatacom]:
         pon_number = numberfy(value=pon)
@@ -66,19 +68,19 @@ class DatacomOLT:
 
                 onu_id = int(parts[1])
                 onu_serial_number = parts[2]
-                onu_state = parts[3].ljust(4)
-                onu_name = NONE_SUBSTITUTE
+                status = parts[3].ljust(4)
+                name = NONE_SUBSTITUTE
 
                 if len(parts) >= 6:
-                    onu_name = parts[5]
+                    name = parts[5]
 
                 onus.append(
                     ONUDatacom(
                         id=onu_id + 1,
                         label=f"ONU {onu_id:03d}",
                         serial_number=onu_serial_number,
-                        onu_state=onu_state,
-                        onu_name=onu_name,
+                        status=status,
+                        name=name,
                     )
                 )
 
@@ -99,13 +101,13 @@ class DatacomOLT:
 
         return onu_ids
 
-    def run_onu_alarms(self, pon: str = "PON 001", onu: str = "ONU 000") -> list[str]:
+    def get_onu_alarms(self, pon: str = "PON 001", onu: str = "ONU 000") -> list[str]:
         pon_number = numberfy(value=pon)
         onu_number = numberfy(value=onu) - 1
         command = f'show alarm | include "gpon-1/1/{pon_number}/{onu_number} "'
         return self._run_command(command=command)
 
-    def run_pon_alarms(self, pon: str = "PON 001") -> list[str]:
+    def get_pon_alarms(self, pon: str = "PON 001") -> list[str]:
         pon_number = numberfy(value=pon)
         command = f"show alarm | include 1/1/{pon_number}/"
         return self._run_command(command=command)

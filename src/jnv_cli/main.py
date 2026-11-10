@@ -150,11 +150,11 @@ def main(stdscr: curses.window) -> None:
                         if command_label == "Consultar alarmes da PON":
                             tui.show_loading(context=ctx_base)
                             if isinstance(selected_olt, FiberhomeOLT):
-                                lines = selected_olt.run_pon_alarms(
+                                lines = selected_olt.get_pon_alarms(
                                     slot=slot_label, pon=pon_label
                                 )
                             else:
-                                lines = selected_olt.run_pon_alarms(pon=pon_label)
+                                lines = selected_olt.get_pon_alarms(pon=pon_label)
                             tui.show_result(
                                 title=(
                                     f"{command_label} — {olt_label} / "
@@ -232,7 +232,7 @@ def main(stdscr: curses.window) -> None:
                                     filtered_onus = [
                                         o
                                         for o in onus
-                                        if serial_query in o["serial_number"].lower()  # type: ignore
+                                        if serial_query in o.serial_number.lower()  # type: ignore
                                     ]
                                     title_filter = f'Serial "{serial_text}"'
                                     filter_ctx_line = f'Serial: "{serial_text}"'
@@ -252,7 +252,7 @@ def main(stdscr: curses.window) -> None:
                                             context=ctx_base
                                             + [f"Filtro: {filter_label}"]
                                         )
-                                        pon_alarms_cache = selected_olt.run_pon_alarms(
+                                        pon_alarms_cache = selected_olt.get_pon_alarms(
                                             pon=pon_label
                                         )
                                     alarm_onu_ids = selected_olt.get_onu_ids_with_alarm(
@@ -260,9 +260,7 @@ def main(stdscr: curses.window) -> None:
                                         alarm_code=filter_code,
                                     )
                                     filtered_onus = [
-                                        o
-                                        for o in onus
-                                        if (o["id"] - 1) in alarm_onu_ids
+                                        o for o in onus if (o.id - 1) in alarm_onu_ids
                                     ]
                                     title_filter = filter_code
                                     filter_ctx_line = f"Filtro: {filter_label}"
@@ -303,17 +301,17 @@ def main(stdscr: curses.window) -> None:
 
                                     onu = filtered_onus[idx_onu]
                                     tui.show_loading(
-                                        context=filter_ctx + [f"ONU: {onu['label']}"]
+                                        context=filter_ctx + [f"ONU: {onu.label}"]
                                     )
-                                    lines = selected_olt.run_onu_alarms(
+                                    lines = selected_olt.get_onu_alarms(
                                         pon=pon_label,
-                                        onu=str(onu["id"]),
+                                        onu=str(onu.id),
                                     )
                                     tui.show_result(
                                         title=(
                                             f"{command_label} — {olt_label} / "
                                             f"{slot_label} / {pon_label} / "
-                                            f"{onu['label']}"
+                                            f"{onu.label}"
                                         ),
                                         lines=lines,
                                     )
@@ -376,7 +374,7 @@ def main(stdscr: curses.window) -> None:
                                     filtered_onus = [
                                         o
                                         for o in onus
-                                        if serial_query in o["serial_number"].lower()  # type: ignore
+                                        if serial_query in o.serial_number.lower()  # type: ignore
                                     ]
                                     title_filter = f'Serial "{serial_text}"'
                                     filter_ctx_line = f'Serial: "{serial_text}"'
@@ -420,7 +418,7 @@ def main(stdscr: curses.window) -> None:
                                     continue
 
                                 status_width = max(
-                                    (len(o["status"]) for o in filtered_onus),  # type: ignore
+                                    (len(o.status) for o in filtered_onus),  # type: ignore
                                     default=0,
                                 )
                                 labels = [
@@ -449,19 +447,19 @@ def main(stdscr: curses.window) -> None:
 
                                     onu = filtered_onus[idx_onu]
                                     tui.show_loading(
-                                        context=filter_ctx + [f"ONU: {onu['label']}"]
+                                        context=filter_ctx + [f"ONU: {onu.label}"]
                                     )
-                                    lines = selected_olt.run_onu_alarms(
+                                    lines = selected_olt.get_onu_alarms(
                                         slot=slot_label,
                                         pon=pon_label,
-                                        onu=onu["id"],
+                                        onu=onu.id,
                                     )
 
                                     tui.show_result(
                                         title=(
                                             f"{command_label} — {olt_label} / "
                                             f"{slot_label} / {pon_label} / "
-                                            f"{onu['label']}"
+                                            f"{onu.label}"
                                         ),
                                         lines=lines,
                                     )

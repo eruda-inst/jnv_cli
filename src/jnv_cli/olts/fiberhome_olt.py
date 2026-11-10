@@ -1,5 +1,6 @@
 import re
-from typing import ClassVar, TypedDict
+from dataclasses import dataclass
+from typing import ClassVar
 
 from jnv_cli.clients.telnet_client import TelnetClient
 from jnv_cli.config import settings
@@ -7,7 +8,8 @@ from jnv_cli.constants import FIBERHOME_ALARM_FILTER_CODES, NONE_SUBSTITUTE
 from jnv_cli.utils import join_values, numberfy
 
 
-class ONUFiberhome(TypedDict):
+@dataclass
+class ONUFiberhome:
     id: int
     label: str
     status: str
@@ -71,14 +73,24 @@ class FiberhomeOLT:
         output = self.telnet_client.send_command(command=last_command)
         return output.splitlines()
 
+    def get_filter_count_map(self, onus: list[ONUFiberhome]) -> dict[str, int]:
+        def get_filter_count(onus: list[ONUFiberhome], filter: str) -> int:
+            return len([onu for onu in onus if onu.status == filter])
+
+        filter_count_map = {}
+        for code in FIBERHOME_ALARM_FILTER_CODES[2::]:
+            filter_count_map[code] = get_filter_count(onus=onus, filter=code)
+
+        return filter_count_map
+
     @classmethod
     def is_telnet_olt(cls, olt: str) -> bool:
         return olt in cls.TELNET_OLTS
 
     def get_onu_label(self, onu: ONUFiberhome, status_width: int = 0) -> str:
-        onu_label = onu["label"]
-        onu_status = onu["status"].ljust(status_width)
-        onu_serial_number = onu["serial_number"]
+        onu_label = onu.label
+        onu_status = onu.status.ljust(status_width)
+        onu_serial_number = onu.serial_number
         if onu_serial_number:
             return join_values(values=[onu_label, onu_status, onu_serial_number])
         return join_values(values=[onu_label, onu_status])
@@ -127,18 +139,9 @@ class FiberhomeOLT:
     ) -> list[ONUFiberhome]:
         if filter_code is None:
             return onus
-        return [onu for onu in onus if onu["status"] == filter_code]
+        return [onu for onu in onus if onu.status == filter_code]
 
-    def _get_filter_count(self, onus: list[ONUFiberhome], filter: str) -> int:
-        return len([onu for onu in onus if onu["status"] == filter])
-
-    def get_filter_count_map(self, onus: list[ONUFiberhome]) -> dict[str, int]:
-        filter_count_map = {}
-        for code in FIBERHOME_ALARM_FILTER_CODES[2::]:
-            filter_count_map[code] = self._get_filter_count(onus=onus, filter=code)
-        return filter_count_map
-
-    def run_pon_alarms(self, slot: str = "SLOT 001", pon: str = "PON 001") -> list[str]:
+    def get_pon_alarms(self, slot: str = "SLOT 001", pon: str = "PON 001") -> list[str]:
         slot_number = numberfy(value=slot)
         pon_number = numberfy(value=pon)
 
@@ -161,7 +164,7 @@ class FiberhomeOLT:
 
         return alarms if len(alarms) else ["(Sem alarmes)"]
 
-    def run_onu_alarms(
+    def get_onu_alarms(
         self, slot: str = "SLOT 001", pon: str = "PON 001", onu: int | str = 1
     ) -> list[str]:
         slot_num = numberfy(value=slot)
