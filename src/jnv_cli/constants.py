@@ -1,10 +1,10 @@
-TITLE = "JNV (Jacobina Network Viewer) v1.11.0"
+TITLE = "JNV (Jacobina Network Viewer) v1.11.1"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 COMMANDS = ("Consultar alarmes das ONUs", "Consultar alarmes da PON")
 SEPARATOR = " | "
 NONE_SUBSTITUTE = "---"
 SERIAL_FILTER_SENTINEL = "__SN__"
-ALARM_FILTER_CODES = (
+DATACOM_ALARM_FILTER_CODES = (
     None,
     SERIAL_FILTER_SENTINEL,
     "GPON_DGi",
@@ -30,7 +30,7 @@ ALARM_FILTER_CODES = (
     "GPON_SFi",
     "GPON_SUFi",
 )
-ALARM_FILTER_LABELS = (
+DATACOM_ALARM_FILTER_LABELS = (
     "Todas",
     "Digite o serial number da ONU",
     "ONUs com perda de energia (Dying Gasp)",
@@ -56,9 +56,9 @@ ALARM_FILTER_LABELS = (
     "ONUs com falha de sinal (SFi)",
     "ONUs com falha de inicialização (SUFi)",
 )
-ALARM_FILTERS = [
-    (ALARM_FILTER_CODES[i], ALARM_FILTER_LABELS[i])
-    for i in range(len(ALARM_FILTER_LABELS))
+DATACOM_ALARM_FILTERS = [
+    (DATACOM_ALARM_FILTER_CODES[i], DATACOM_ALARM_FILTER_LABELS[i])
+    for i in range(len(DATACOM_ALARM_FILTER_LABELS))
 ]
 FIBERHOME_ALARM_FILTER_CODES = (
     None,

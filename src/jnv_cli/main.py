@@ -3,8 +3,10 @@ import curses
 from jnv_cli.clients.ssh_client import SSHClient
 from jnv_cli.clients.telnet_client import TelnetClient
 from jnv_cli.constants import (
-    ALARM_FILTERS,
     COMMANDS,
+    DATACOM_ALARM_FILTER_CODES,
+    DATACOM_ALARM_FILTERS,
+    FIBERHOME_ALARM_FILTER_CODES,
     FIBERHOME_ALARM_FILTER_LABELS,
     FIBERHOME_ALARM_FILTERS,
     OLT_PONS,
@@ -190,20 +192,16 @@ def main(stdscr: curses.window) -> None:
 
                             while True:
                                 max_code_len = max(
-                                    (
-                                        len(code)
-                                        for code, _ in ALARM_FILTERS
-                                        if code and code != SERIAL_FILTER_SENTINEL
-                                    ),
-                                    default=0,
+                                    len(code)
+                                    for code in DATACOM_ALARM_FILTER_CODES[2::]
                                 )
                                 filter_labels = [
                                     label
-                                    if code is None or code == SERIAL_FILTER_SENTINEL
+                                    if code in (None, SERIAL_FILTER_SENTINEL)
                                     else join_values(
                                         values=[code.ljust(max_code_len), label]
                                     )
-                                    for code, label in ALARM_FILTERS
+                                    for code, label in DATACOM_ALARM_FILTERS
                                 ]
                                 idx_filter = tui.select_menu(
                                     question="Selecione o filtro de alarme",
@@ -218,7 +216,9 @@ def main(stdscr: curses.window) -> None:
                                     last_onu_idx = 0
                                 last_filter_idx = idx_filter
 
-                                filter_code, filter_label = ALARM_FILTERS[idx_filter]
+                                filter_code, filter_label = DATACOM_ALARM_FILTERS[
+                                    idx_filter
+                                ]
 
                                 if filter_code == SERIAL_FILTER_SENTINEL:
                                     serial_input = tui.ask_input(
@@ -319,16 +319,12 @@ def main(stdscr: curses.window) -> None:
                         elif isinstance(selected_olt, FiberhomeOLT):
                             while True:
                                 max_code_len = max(
-                                    (
-                                        len(code)
-                                        for code, _ in FIBERHOME_ALARM_FILTERS
-                                        if code and code != SERIAL_FILTER_SENTINEL
-                                    )
+                                    len(code)
+                                    for code in FIBERHOME_ALARM_FILTER_CODES[2::]
                                 )
                                 max_label_len = max(
                                     len(label)
-                                    for label in FIBERHOME_ALARM_FILTER_LABELS
-                                    if label not in (None, SERIAL_FILTER_SENTINEL)
+                                    for label in FIBERHOME_ALARM_FILTER_LABELS[2::]
                                 )
                                 filter_count_map = selected_olt.get_filter_count_map(
                                     onus=onus  # type: ignore
