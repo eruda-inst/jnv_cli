@@ -13,9 +13,7 @@ from jnv_cli.constants import (
 from jnv_cli.olts.datacom_olt import DatacomOLT
 from jnv_cli.olts.fiberhome_olt import FiberhomeOLT
 from jnv_cli.tui import TUI
-
-# from jnv_cli.utils import join_values, logger
-from jnv_cli.utils import join_values
+from jnv_cli.utils import join_values, logger
 
 
 def _open_connection(
@@ -469,11 +467,9 @@ def run() -> None:
     try:
         curses.wrapper(main)
     except ConnectionResetError:
-        # logger.error(msg="Conexão encerrada por ociosidade.")
-        print("Conexão encerrada por ociosidade.")
+        logger.error(msg="Conexão encerrada por ociosidade.")
     except KeyboardInterrupt:
-        # logger.info(msg="Programa encerrado pelo usuário.")
-        print("Programa encerrado pelo usuário.")
+        logger.info(msg="Programa encerrado pelo usuário.")
 
 
 if __name__ == "__main__":

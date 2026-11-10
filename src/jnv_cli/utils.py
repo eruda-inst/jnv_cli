@@ -1,10 +1,14 @@
-# import logging
+import logging
 
 from jnv_cli.constants import SEPARATOR
 
-# format = "%(asctime)s - %(levelname)s - %(message)s"
-# logging.basicConfig(format=format, level=logging.DEBUG)
-# logger = logging.getLogger(name=__name__)
+format = logging.Formatter(fmt="%(asctime)s - %(levelname)s - %(message)s")
+handler = logging.StreamHandler()
+logger = logging.getLogger(name=__name__)
+
+handler.setFormatter(fmt=format)
+logger.setLevel(level=logging.INFO)
+logger.addHandler(hdlr=handler)
 
 
 def join_values(values: list[str], separator: str = SEPARATOR) -> str:
