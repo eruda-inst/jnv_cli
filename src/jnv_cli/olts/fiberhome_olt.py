@@ -3,7 +3,7 @@ from typing import ClassVar, TypedDict
 
 from jnv_cli.clients.telnet_client import TelnetClient
 from jnv_cli.config import settings
-from jnv_cli.constants import NONE_SUBSTITUTE
+from jnv_cli.constants import FIBERHOME_ALARM_FILTER_CODES, NONE_SUBSTITUTE
 from jnv_cli.utils import join_values, numberfy
 
 
@@ -38,9 +38,7 @@ class FiberhomeOLT:
 
     def _get_onu_status(self, slot_num: int, pon_num: int) -> dict[int, str]:
         commands = ["cd /", "cd onu", f"show onu_state slot {slot_num} pon {pon_num}"]
-
         raw_lines = self._run_commands(commands=commands)
-
         status_map = {}
 
         for raw_line in raw_lines:
@@ -98,9 +96,7 @@ class FiberhomeOLT:
         ]
 
         raw_lines = self._run_commands(commands=commands)
-
         status_map = self._get_onu_status(slot_num=slot_num, pon_num=pon_num)
-
         onus = []
 
         for raw_line in raw_lines:
@@ -109,7 +105,6 @@ class FiberhomeOLT:
             if match is not None:
                 raw_result = match.group()
                 result = raw_result.strip()
-
                 parts = result.split()
 
                 onu_id = int(parts[2])
@@ -133,6 +128,15 @@ class FiberhomeOLT:
         if filter_code is None:
             return onus
         return [onu for onu in onus if onu["status"] == filter_code]
+
+    def _get_filter_count(self, onus: list[ONUFiberhome], filter: str) -> int:
+        return len([onu for onu in onus if onu["status"] == filter])
+
+    def get_filter_count_map(self, onus: list[ONUFiberhome]) -> dict[str, int]:
+        filter_count_map = {}
+        for code in FIBERHOME_ALARM_FILTER_CODES[2::]:
+            filter_count_map[code] = self._get_filter_count(onus=onus, filter=code)
+        return filter_count_map
 
     def run_pon_alarms(self, slot: str = "SLOT 001", pon: str = "PON 001") -> list[str]:
         slot_number = numberfy(value=slot)

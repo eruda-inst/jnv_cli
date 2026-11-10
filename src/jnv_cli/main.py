@@ -4,8 +4,9 @@ from jnv_cli.clients.ssh_client import SSHClient
 from jnv_cli.clients.telnet_client import TelnetClient
 from jnv_cli.constants import (
     ALARM_FILTERS,
-    ALARM_FILTERS_FIBERHOME,
     COMMANDS,
+    FIBERHOME_ALARM_FILTER_LABELS,
+    FIBERHOME_ALARM_FILTERS,
     OLT_PONS,
     OLTS,
     SERIAL_FILTER_SENTINEL,
@@ -322,18 +323,29 @@ def main(stdscr: curses.window) -> None:
                                 max_code_len = max(
                                     (
                                         len(code)
-                                        for code, _ in ALARM_FILTERS_FIBERHOME
+                                        for code, _ in FIBERHOME_ALARM_FILTERS
                                         if code and code != SERIAL_FILTER_SENTINEL
-                                    ),
-                                    default=0,
+                                    )
+                                )
+                                max_label_len = max(
+                                    len(label)
+                                    for label in FIBERHOME_ALARM_FILTER_LABELS
+                                    if label not in (None, SERIAL_FILTER_SENTINEL)
+                                )
+                                filter_count_map = selected_olt.get_filter_count_map(
+                                    onus=onus  # type: ignore
                                 )
                                 filter_labels = [
                                     label
                                     if code is None or code == SERIAL_FILTER_SENTINEL
                                     else join_values(
-                                        values=[code.ljust(max_code_len), label]
+                                        values=[
+                                            code.ljust(max_code_len),
+                                            label.ljust(max_label_len),
+                                            f"{filter_count_map[code]:03d}",
+                                        ]
                                     )
-                                    for code, label in ALARM_FILTERS_FIBERHOME
+                                    for code, label in FIBERHOME_ALARM_FILTERS
                                 ]
                                 idx_filter = tui.select_menu(
                                     question="Selecione o filtro de status",
@@ -348,7 +360,7 @@ def main(stdscr: curses.window) -> None:
                                     last_onu_idx = 0
                                 last_filter_idx = idx_filter
 
-                                filter_code, filter_label = ALARM_FILTERS_FIBERHOME[
+                                filter_code, filter_label = FIBERHOME_ALARM_FILTERS[
                                     idx_filter
                                 ]
 

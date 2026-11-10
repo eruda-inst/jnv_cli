@@ -1,14 +1,9 @@
-TITLE = "JNV (Jacobina Network Viewer) v1.10.5"
+TITLE = "JNV (Jacobina Network Viewer) v1.10.9"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
-
 COMMANDS = ("Consultar alarmes das ONUs", "Consultar alarmes da PON")
-
 SEPARATOR = " | "
-
 NONE_SUBSTITUTE = "---"
-
 SERIAL_FILTER_SENTINEL = "__SN__"
-
 ALARM_FILTERS = [
     (None, "Todas"),
     (SERIAL_FILTER_SENTINEL, "Digite o serial number da ONU"),
@@ -35,17 +30,26 @@ ALARM_FILTERS = [
     ("GPON_SFi", "ONUs com falha de sinal (SFi)"),
     ("GPON_SUFi", "ONUs com falha de inicialização (SUFi)"),
 ]
-
-ALARM_FILTERS_FIBERHOME = [
-    (None, "Todas"),
-    (SERIAL_FILTER_SENTINEL, "Digite o serial number da ONU"),
-    ("active", "ONUs sem alarmes"),
-    ("inactive", "ONUs inativas (LOS ou Dying Gasp)"),
-    ("link loss", "ONUs com perda de sinal (LOS)"),
-    ("power down", "ONUs com perda de energia (Dying Gasp)"),
+FIBERHOME_ALARM_FILTER_CODES = (
+    None,
+    SERIAL_FILTER_SENTINEL,
+    "active",
+    "inactive",
+    "link loss",
+    "power down",
+)
+FIBERHOME_ALARM_FILTER_LABELS = (
+    "Todas",
+    "Digite o serial number da ONU",
+    "ONUs sem alarmes",
+    "ONUs inativas (LOS ou Dying Gasp)",
+    "ONUs com perda de sinal (LOS)",
+    "ONUs com perda de energia (Dying Gasp)",
+)
+FIBERHOME_ALARM_FILTERS = [
+    (FIBERHOME_ALARM_FILTER_CODES[i], FIBERHOME_ALARM_FILTER_LABELS[i])
+    for i in range(len(FIBERHOME_ALARM_FILTER_LABELS))
 ]
-
-
 OLTS = {
     "OLT de Acija": [f"SLOT {i:03d}" for i in range(1, 4 + 1)],
     "OLT de Itaitú": [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
@@ -55,23 +59,39 @@ OLTS = {
     "OLT de Palmeirinha": [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
     "OLT de Paraíso": [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
 }
-
-
-def _pons(count: int) -> list[str]:
-    return [f"PON {i:03d}" for i in range(1, count + 1)]
-
-
 OLT_PONS = {
-    "OLT de Acija": {slot: _pons(16) for slot in OLTS["OLT de Acija"]},
-    "OLT de Itaitú": {slot: _pons(8) for slot in OLTS["OLT de Itaitú"]},
-    "OLT de Jacobina III": {slot: _pons(16) for slot in OLTS["OLT de Jacobina III"]},
+    "OLT de Acija": {
+        slot: [f"PON {i:03d}" for i in range(1, 16 + 1)]
+        for slot in OLTS["OLT de Acija"]
+    },
+    "OLT de Itaitú": {
+        slot: [f"PON {i:03d}" for i in range(1, 8 + 1)]
+        for slot in OLTS["OLT de Itaitú"]
+    },
+    "OLT de Jacobina III": {
+        slot: [f"PON {i:03d}" for i in range(1, 16 + 1)]
+        for slot in OLTS["OLT de Jacobina III"]
+    },
     "OLT de Lajes do Batata": {
-        slot: _pons(16) for slot in OLTS["OLT de Lajes do Batata"]
+        slot: [f"PON {i:03d}" for i in range(1, 16 + 1)]
+        for slot in OLTS["OLT de Lajes do Batata"]
     },
     "OLT de Newnet": {
-        **{slot: _pons(8) for slot in OLTS["OLT de Newnet"][:3]},
-        **{slot: _pons(16) for slot in OLTS["OLT de Newnet"][3:]},
+        **{
+            slot: [f"PON {i:03d}" for i in range(1, 8 + 1)]
+            for slot in OLTS["OLT de Newnet"][:3]
+        },
+        **{
+            slot: [f"PON {i:03d}" for i in range(1, 16 + 1)]
+            for slot in OLTS["OLT de Newnet"][3:]
+        },
     },
-    "OLT de Palmeirinha": {slot: _pons(8) for slot in OLTS["OLT de Palmeirinha"]},
-    "OLT de Paraíso": {slot: _pons(16) for slot in OLTS["OLT de Paraíso"]},
+    "OLT de Palmeirinha": {
+        slot: [f"PON {i:03d}" for i in range(1, 8 + 1)]
+        for slot in OLTS["OLT de Palmeirinha"]
+    },
+    "OLT de Paraíso": {
+        slot: [f"PON {i:03d}" for i in range(1, 16 + 1)]
+        for slot in OLTS["OLT de Paraíso"]
+    },
 }
