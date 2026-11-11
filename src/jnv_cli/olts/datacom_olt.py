@@ -96,10 +96,9 @@ class DatacomOLT:
 
         for raw_line in raw_lines:
             line = raw_line.strip()
-            if line:
-                parts = line.split()
-                status = parts[6]
-                alarms.append(status)
+            parts = line.split()
+            status = parts[2]
+            alarms.append(status)
 
         for code in DATACOM_ALARM_FILTER_CODES[2::]:
             filter_count_map[code] = get_filter_count(alarms=alarms, filter=code)
@@ -115,7 +114,7 @@ class DatacomOLT:
 
     def get_onus(self, pon: str = "PON 001") -> list[ONUDatacom]:
         pon_number = numberfy(value=pon)
-        command = f"show interface gpon 1/1/{pon_number} onu"
+        command = f"show interface gpon 1/1/{pon_number} onu | nomore"
 
         raw_lines = self._run_command(command=command)
         onus = []
@@ -168,10 +167,12 @@ class DatacomOLT:
     def get_onu_alarms(self, pon: str = "PON 001", onu: str = "ONU 000") -> list[str]:
         pon_number = numberfy(value=pon)
         onu_number = numberfy(value=onu) - 1
-        command = f'show alarm | include "gpon-1/1/{pon_number}/{onu_number} "'
+        command = (
+            f'show alarm | include "gpon-1/1/{pon_number}/{onu_number} " | nomore | tab'
+        )
         return self._run_command(command=command)
 
     def get_pon_alarms(self, pon: str = "PON 001") -> list[str]:
         pon_number = numberfy(value=pon)
-        command = f"show alarm | include 1/1/{pon_number}/"
+        command = f"show alarm | include 1/1/{pon_number}/ | nomore | tab"
         return self._run_command(command=command)
