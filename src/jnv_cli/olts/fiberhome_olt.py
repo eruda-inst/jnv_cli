@@ -4,7 +4,7 @@ from typing import ClassVar
 
 from jnv_cli.clients.telnet_client import TelnetClient
 from jnv_cli.config import settings
-from jnv_cli.constants import FIBERHOME_ALARM_FILTER_CODES, NONE_SUBSTITUTE
+from jnv_cli.constants import FIBERHOME_ALARM_FILTER_CODES, NONE_SUBSTITUTE, OLTNames
 from jnv_cli.utils import join_values, numberfy
 
 
@@ -30,8 +30,8 @@ class FiberhomeOLT:
         pattern=r"active|inactive|power down|link loss"
     )
     FIBERHOME_HOSTNAMES: ClassVar[dict[str, str]] = {
-        "OLT de Acija": settings.olt_acija_hostname,
-        "OLT de Newnet": settings.olt_newnet_hostname,
+        OLTNames.ACIJA: settings.olt_acija_hostname,
+        OLTNames.NEWNET: settings.olt_newnet_hostname,
     }
 
     def __init__(self, telnet_client: TelnetClient) -> None:

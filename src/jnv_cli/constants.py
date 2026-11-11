@@ -1,4 +1,17 @@
-TITLE = "JNV (Jacobina Network Viewer) v1.11.2"
+from enum import StrEnum
+
+
+class OLTNames(StrEnum):
+    ACIJA = "OLT de Acija"
+    ITAITU = "OLT de Itaitú"
+    JACOBINA_III = "OLT de Jacobina III"
+    LAGES_DO_BATATA = "OLT de Lajes do Batata"
+    NEWNET = "OLT de Newnet"
+    PALMEIRINHA = "OLT de Palmeirinha"
+    PARAISO = "OLT de Paraíso"
+
+
+TITLE = "JNV (Jacobina Network Viewer) v1.11.3"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 COMMANDS = ("Consultar alarmes das ONUs", "Consultar alarmes da PON")
 SEPARATOR = " | "
@@ -81,47 +94,47 @@ FIBERHOME_ALARM_FILTERS = [
     for i in range(len(FIBERHOME_ALARM_FILTER_LABELS))
 ]
 OLTS = {
-    "OLT de Acija": [f"SLOT {i:03d}" for i in range(1, 4 + 1)],
-    "OLT de Itaitú": [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
-    "OLT de Jacobina III": [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
-    "OLT de Lajes do Batata": [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
-    "OLT de Newnet": [f"SLOT {i:03d}" for i in range(1, 7 + 1)],
-    "OLT de Palmeirinha": [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
-    "OLT de Paraíso": [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
+    OLTNames.ACIJA: [f"SLOT {i:03d}" for i in range(1, 4 + 1)],
+    OLTNames.ITAITU: [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
+    OLTNames.JACOBINA_III: [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
+    OLTNames.LAGES_DO_BATATA: [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
+    OLTNames.NEWNET: [f"SLOT {i:03d}" for i in range(1, 7 + 1)],
+    OLTNames.PALMEIRINHA: [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
+    OLTNames.PARAISO: [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
 }
 OLT_PONS = {
-    "OLT de Acija": {
+    OLTNames.ACIJA: {
         slot: [f"PON {i:03d}" for i in range(1, 16 + 1)]
-        for slot in OLTS["OLT de Acija"]
+        for slot in OLTS[OLTNames.ACIJA]
     },
-    "OLT de Itaitú": {
+    OLTNames.ITAITU: {
         slot: [f"PON {i:03d}" for i in range(1, 8 + 1)]
-        for slot in OLTS["OLT de Itaitú"]
+        for slot in OLTS[OLTNames.ITAITU]
     },
-    "OLT de Jacobina III": {
+    OLTNames.JACOBINA_III: {
         slot: [f"PON {i:03d}" for i in range(1, 16 + 1)]
-        for slot in OLTS["OLT de Jacobina III"]
+        for slot in OLTS[OLTNames.JACOBINA_III]
     },
-    "OLT de Lajes do Batata": {
+    OLTNames.LAGES_DO_BATATA: {
         slot: [f"PON {i:03d}" for i in range(1, 16 + 1)]
-        for slot in OLTS["OLT de Lajes do Batata"]
+        for slot in OLTS[OLTNames.LAGES_DO_BATATA]
     },
-    "OLT de Newnet": {
+    OLTNames.NEWNET: {
         **{
             slot: [f"PON {i:03d}" for i in range(1, 8 + 1)]
-            for slot in OLTS["OLT de Newnet"][:3]
+            for slot in OLTS[OLTNames.NEWNET][:3]
         },
         **{
             slot: [f"PON {i:03d}" for i in range(1, 16 + 1)]
-            for slot in OLTS["OLT de Newnet"][3:]
+            for slot in OLTS[OLTNames.NEWNET][3:]
         },
     },
-    "OLT de Palmeirinha": {
+    OLTNames.PALMEIRINHA: {
         slot: [f"PON {i:03d}" for i in range(1, 8 + 1)]
-        for slot in OLTS["OLT de Palmeirinha"]
+        for slot in OLTS[OLTNames.PALMEIRINHA]
     },
-    "OLT de Paraíso": {
+    OLTNames.PARAISO: {
         slot: [f"PON {i:03d}" for i in range(1, 16 + 1)]
-        for slot in OLTS["OLT de Paraíso"]
+        for slot in OLTS[OLTNames.PARAISO]
     },
 }

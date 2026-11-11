@@ -4,7 +4,7 @@ from typing import ClassVar
 
 from jnv_cli.clients.ssh_client import SSHClient
 from jnv_cli.config import settings
-from jnv_cli.constants import NONE_SUBSTITUTE
+from jnv_cli.constants import NONE_SUBSTITUTE, OLTNames
 from jnv_cli.utils import join_values, numberfy
 
 
@@ -23,11 +23,11 @@ class DatacomOLT:
     )
     GPON_RE: ClassVar[re.Pattern[str]] = re.compile(pattern=r"gpon-\d+/\d+/\d+/(\d+)")
     DATACOM_HOSTNAMES: ClassVar[dict[str, str]] = {
-        "OLT de Itaitú": settings.olt_itaitu_hostname,
-        "OLT de Jacobina III": settings.olt_jac_3_hostname,
-        "OLT de Lajes do Batata": settings.olt_lajes_hostname,
-        "OLT de Palmeirinha": settings.olt_palmeirinha_hostname,
-        "OLT de Paraíso": settings.olt_paraiso_hostname,
+        OLTNames.ITAITU: settings.olt_itaitu_hostname,
+        OLTNames.JACOBINA_III: settings.olt_jac_3_hostname,
+        OLTNames.LAGES_DO_BATATA: settings.olt_lajes_hostname,
+        OLTNames.PALMEIRINHA: settings.olt_palmeirinha_hostname,
+        OLTNames.PARAISO: settings.olt_paraiso_hostname,
     }
 
     def __init__(self, ssh_client: SSHClient) -> None:
