@@ -4,6 +4,7 @@ from jnv_cli.clients.ssh_client import SSHClient
 from jnv_cli.clients.telnet_client import TelnetClient
 from jnv_cli.olts.datacom_olt import (
     DATACOM_ALARM_FILTER_CODES,
+    DATACOM_ALARM_FILTER_LABELS,
     DATACOM_ALARM_FILTERS,
     DatacomOLT,
 )
@@ -241,11 +242,22 @@ def main(stdscr: curses.window) -> None:
                                     len(code)
                                     for code in DATACOM_ALARM_FILTER_CODES[2::]
                                 )
+                                max_label_len = max(
+                                    len(label)
+                                    for label in DATACOM_ALARM_FILTER_LABELS[2::]
+                                )
+                                filter_count_map = selected_olt.get_filter_count_map(
+                                    pon=pon_label
+                                )
                                 filter_labels = [
                                     label
                                     if code in (None, SERIAL_FILTER_SENTINEL)
                                     else join_values(
-                                        values=[code.ljust(max_code_len), label]
+                                        values=[
+                                            code.ljust(max_code_len),
+                                            label.ljust(max_label_len),
+                                            f"{filter_count_map[code]:03d}",
+                                        ]
                                     )
                                     for code, label in DATACOM_ALARM_FILTERS
                                 ]
