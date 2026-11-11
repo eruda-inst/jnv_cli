@@ -114,8 +114,7 @@ class FiberhomeOLT:
         pon_num = numberfy(value=pon)
 
         commands = [
-            "cd /",
-            "cd onu",
+            "cd /onu",
             f"show authorization slot {slot_num} pon {pon_num}",
         ]
 
@@ -158,8 +157,7 @@ class FiberhomeOLT:
         pon_number = numberfy(value=pon)
 
         commands = [
-            "cd /",
-            "cd onu",
+            "cd /onu",
             f"show onu_state slot {slot_number} pon {pon_number}",
         ]
 
@@ -184,9 +182,7 @@ class FiberhomeOLT:
         onu_num = numberfy(value=onu)
 
         commands = [
-            "cd /",
-            "cd maintenance",
-            "cd alarm",
+            "cd /maintenance/alarm",
             f"show alarm current obj 1/{slot_num}/{pon_num}/{onu_num}",
         ]
 
