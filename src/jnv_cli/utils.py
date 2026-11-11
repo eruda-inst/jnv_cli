@@ -1,17 +1,8 @@
-import logging
-
-from jnv_cli.constants import SEPARATOR
-
-format = logging.Formatter(fmt="%(asctime)s - %(levelname)s - %(message)s")
-handler = logging.StreamHandler()
-logger = logging.getLogger(name=__name__)
-
-handler.setFormatter(fmt=format)
-logger.setLevel(level=logging.INFO)
-logger.addHandler(hdlr=handler)
+NONE_SUBSTITUTE = "---"
+SERIAL_FILTER_SENTINEL = "__SN__"
 
 
-def join_values(values: list[str], separator: str = SEPARATOR) -> str:
+def join_values(values: list[str], separator: str = " | ") -> str:
     return separator.join(map(str, values))
 
 

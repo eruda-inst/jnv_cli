@@ -1,7 +1,8 @@
 import curses
 from collections.abc import Sequence
 
-from jnv_cli.constants import CREDITS, TITLE
+TITLE = "JNV (Jacobina Network Viewer) v1.11.4"
+CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 
 
 class TUI:

@@ -2,25 +2,71 @@ import curses
 
 from jnv_cli.clients.ssh_client import SSHClient
 from jnv_cli.clients.telnet_client import TelnetClient
-from jnv_cli.constants import (
-    COMMANDS,
+from jnv_cli.olts.datacom_olt import (
     DATACOM_ALARM_FILTER_CODES,
     DATACOM_ALARM_FILTERS,
+    DatacomOLT,
+)
+from jnv_cli.olts.fiberhome_olt import (
     FIBERHOME_ALARM_FILTER_CODES,
     FIBERHOME_ALARM_FILTER_LABELS,
     FIBERHOME_ALARM_FILTERS,
-    OLT_PONS,
-    OLTS,
-    SERIAL_FILTER_SENTINEL,
+    FiberhomeOLT,
 )
-from jnv_cli.olts.datacom_olt import DatacomOLT
-from jnv_cli.olts.fiberhome_olt import FiberhomeOLT
 from jnv_cli.tui import TUI
-from jnv_cli.utils import join_values, logger
+from jnv_cli.types.olt_names import OLTNames
+from jnv_cli.utils import SERIAL_FILTER_SENTINEL, join_values
+
+COMMANDS = ("Consultar alarmes das ONUs", "Consultar alarmes da PON")
+OLTS = {
+    OLTNames.ACIJA: [f"SLOT {i:03d}" for i in range(1, 4 + 1)],
+    OLTNames.ITAITU: [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
+    OLTNames.JACOBINA_III: [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
+    OLTNames.LAGES_DO_BATATA: [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
+    OLTNames.NEWNET: [f"SLOT {i:03d}" for i in range(1, 7 + 1)],
+    OLTNames.PALMEIRINHA: [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
+    OLTNames.PARAISO: [f"SLOT {i:03d}" for i in range(1, 1 + 1)],
+}
+OLT_PONS = {
+    OLTNames.ACIJA: {
+        slot: [f"PON {i:03d}" for i in range(1, 16 + 1)]
+        for slot in OLTS[OLTNames.ACIJA]
+    },
+    OLTNames.ITAITU: {
+        slot: [f"PON {i:03d}" for i in range(1, 8 + 1)]
+        for slot in OLTS[OLTNames.ITAITU]
+    },
+    OLTNames.JACOBINA_III: {
+        slot: [f"PON {i:03d}" for i in range(1, 16 + 1)]
+        for slot in OLTS[OLTNames.JACOBINA_III]
+    },
+    OLTNames.LAGES_DO_BATATA: {
+        slot: [f"PON {i:03d}" for i in range(1, 16 + 1)]
+        for slot in OLTS[OLTNames.LAGES_DO_BATATA]
+    },
+    OLTNames.NEWNET: {
+        **{
+            slot: [f"PON {i:03d}" for i in range(1, 8 + 1)]
+            for slot in OLTS[OLTNames.NEWNET][:3]
+        },
+        **{
+            slot: [f"PON {i:03d}" for i in range(1, 16 + 1)]
+            for slot in OLTS[OLTNames.NEWNET][3:]
+        },
+    },
+    OLTNames.PALMEIRINHA: {
+        slot: [f"PON {i:03d}" for i in range(1, 8 + 1)]
+        for slot in OLTS[OLTNames.PALMEIRINHA]
+    },
+    OLTNames.PARAISO: {
+        slot: [f"PON {i:03d}" for i in range(1, 16 + 1)]
+        for slot in OLTS[OLTNames.PARAISO]
+    },
+}
 
 
 def _open_connection(
-    tui: TUI, olt_label: str
+    tui: TUI, olt_label: OLTNames
 ) -> tuple[SSHClient | TelnetClient | None, DatacomOLT | FiberhomeOLT | None]:
     if DatacomOLT.is_datacom_olt(olt=olt_label):
         hostname = DatacomOLT.DATACOM_HOSTNAMES[olt_label]
@@ -232,7 +278,7 @@ def main(stdscr: curses.window) -> None:
                                     filtered_onus = [
                                         o
                                         for o in onus
-                                        if serial_query in o.serial_number.lower()  # type: ignore
+                                        if serial_query in o.serial.lower()  # type: ignore
                                     ]
                                     title_filter = f'Serial "{serial_text}"'
                                     filter_ctx_line = f'Serial: "{serial_text}"'
@@ -370,7 +416,7 @@ def main(stdscr: curses.window) -> None:
                                     filtered_onus = [
                                         o
                                         for o in onus
-                                        if serial_query in o.serial_number.lower()  # type: ignore
+                                        if serial_query in o.serial.lower()  # type: ignore
                                     ]
                                     title_filter = f'Serial "{serial_text}"'
                                     filter_ctx_line = f'Serial: "{serial_text}"'
@@ -473,9 +519,9 @@ def run() -> None:
     try:
         curses.wrapper(main)
     except ConnectionResetError:
-        logger.error(msg="Conexão encerrada por ociosidade.")
+        print("Conexão encerrada por ociosidade.")
     except KeyboardInterrupt:
-        logger.info(msg="Programa encerrado pelo usuário.")
+        print("Programa encerrado pelo usuário.")
 
 
 if __name__ == "__main__":

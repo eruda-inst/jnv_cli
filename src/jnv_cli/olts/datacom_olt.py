@@ -4,8 +4,65 @@ from typing import ClassVar
 
 from jnv_cli.clients.ssh_client import SSHClient
 from jnv_cli.config import settings
-from jnv_cli.constants import NONE_SUBSTITUTE, OLTNames
-from jnv_cli.utils import join_values, numberfy
+from jnv_cli.types.olt_names import OLTNames
+from jnv_cli.utils import NONE_SUBSTITUTE, SERIAL_FILTER_SENTINEL, join_values, numberfy
+
+DATACOM_ALARM_FILTER_CODES = (
+    None,
+    SERIAL_FILTER_SENTINEL,
+    "GPON_DGi",
+    "GPON_LOSi",
+    "GPON_DFi",
+    "GPON_DOWi",
+    "GPON_LCDGi",
+    "GPON_LOAi",
+    "GPON_LOAMi",
+    "GPON_LOBi",
+    "GPON_LOFi",
+    "GPON_LOOCi",
+    "GPON_LOPCi",
+    "GPON_MISi",
+    "GPON_ONU_AUTO_PROV_FAIL",
+    "GPON_ONU_DOWN",
+    "GPON_ONU_EQUIP_FAILURE",
+    "GPON_ONU_PASSWORD_MISMATCH",
+    "GPON_ONU_SELF_TEST_FAILURE",
+    "GPON_PEEi",
+    "GPON_RDIi",
+    "GPON_SDi",
+    "GPON_SFi",
+    "GPON_SUFi",
+)
+DATACOM_ALARM_FILTER_LABELS = (
+    "Todas",
+    "Digite o serial number da ONU",
+    "ONUs com perda de energia (Dying Gasp)",
+    "ONUs com perda de sinal (LOS)",
+    "ONUs com falha de desativação (DFi)",
+    "ONUs com deslocamento da janela (DOWi)",
+    "ONUs com perda do delineamento do canal GEM (LCDGi)",
+    "ONUs com perda de reconhecimento (LOAi)",
+    "ONUs com perda de PLOAM (LOAMi)",
+    "ONUs com perda de rajada (LOBi)",
+    "ONUs com perda de frame (LOFi)",
+    "ONUs com perda do canal OMCC (LOOCi)",
+    "ONUs com perda do canal PLOAM (LOPCi)",
+    "ONUs com incompatibilidade de link (MISi)",
+    "ONUs com falha no provisionamento automático",
+    "ONUs inativas ou desconectadas do link PON",
+    "ONUs com falha interna/defeito de equipamento",
+    "ONUs com incompatibilidade de senha",
+    "ONUs com falha no autoteste",
+    "ONUs com erro de equipamento físico (PEEi)",
+    "ONUs com indicação remota de defeito (RDIi)",
+    "ONUs com sinal degradado (SDi)",
+    "ONUs com falha de sinal (SFi)",
+    "ONUs com falha de inicialização (SUFi)",
+)
+DATACOM_ALARM_FILTERS = [
+    (DATACOM_ALARM_FILTER_CODES[i], DATACOM_ALARM_FILTER_LABELS[i])
+    for i in range(len(DATACOM_ALARM_FILTER_LABELS))
+]
 
 
 @dataclass
@@ -13,16 +70,16 @@ class ONUDatacom:
     id: int
     label: str
     status: str
-    serial_number: str
+    serial: str
     name: str
 
 
 class DatacomOLT:
-    ONU_RE: ClassVar[re.Pattern[str]] = re.compile(
+    _ONU_RE: ClassVar[re.Pattern[str]] = re.compile(
         pattern=r"\d+/\d+/\d+\s+\d+\s+\w{12}\s+(Up|Down)\s+\w+\s{0,}\S{0,}"
     )
-    GPON_RE: ClassVar[re.Pattern[str]] = re.compile(pattern=r"gpon-\d+/\d+/\d+/(\d+)")
-    DATACOM_HOSTNAMES: ClassVar[dict[str, str]] = {
+    _GPON_RE: ClassVar[re.Pattern[str]] = re.compile(pattern=r"gpon-\d+/\d+/\d+/(\d+)")
+    DATACOM_HOSTNAMES: ClassVar[dict[OLTNames, str]] = {
         OLTNames.ITAITU: settings.olt_itaitu_hostname,
         OLTNames.JACOBINA_III: settings.olt_jac_3_hostname,
         OLTNames.LAGES_DO_BATATA: settings.olt_lajes_hostname,
@@ -31,11 +88,11 @@ class DatacomOLT:
     }
 
     def __init__(self, ssh_client: SSHClient) -> None:
-        self.ssh_client = ssh_client
+        self.client = ssh_client
 
     def _run_command(self, command: str) -> list[str]:
-        self.ssh_client.execute_command(command=command)
-        stdout = self.ssh_client.get_stdout()
+        self.client.execute_command(command=command)
+        stdout = self.client.get_stdout()
         return stdout.splitlines() or ["(Sem alarmes)"]
 
     @classmethod
@@ -43,11 +100,7 @@ class DatacomOLT:
         return olt in cls.DATACOM_HOSTNAMES
 
     def get_onu_label(self, onu: ONUDatacom) -> str:
-        onu_label = onu.label
-        onu_serial_number = onu.serial_number
-        status = onu.status
-        name = onu.name
-        return join_values(values=[onu_label, onu_serial_number, status, name])
+        return join_values(values=[onu.label, onu.serial, onu.status, onu.name])
 
     def get_onus(self, pon: str = "PON 001") -> list[ONUDatacom]:
         pon_number = numberfy(value=pon)
@@ -58,7 +111,7 @@ class DatacomOLT:
 
         for raw_line in raw_lines:
             line = raw_line.strip()
-            match = self.ONU_RE.search(string=line)
+            match = self._ONU_RE.search(string=line)
 
             if match is not None:
                 result_raw = match.group()
@@ -67,7 +120,7 @@ class DatacomOLT:
                 parts = result.split()
 
                 onu_id = int(parts[1])
-                onu_serial_number = parts[2]
+                onu_serial = parts[2]
                 status = parts[3].ljust(4)
                 name = NONE_SUBSTITUTE
 
@@ -78,7 +131,7 @@ class DatacomOLT:
                     ONUDatacom(
                         id=onu_id + 1,
                         label=f"ONU {onu_id:03d}",
-                        serial_number=onu_serial_number,
+                        serial=onu_serial,
                         status=status,
                         name=name,
                     )
@@ -95,7 +148,7 @@ class DatacomOLT:
         for line in alarm_lines:
             if not code_re.search(string=line):
                 continue
-            match = self.GPON_RE.search(string=line)
+            match = self._GPON_RE.search(string=line)
             if match:
                 onu_ids.add(int(match.group(1)))
 
