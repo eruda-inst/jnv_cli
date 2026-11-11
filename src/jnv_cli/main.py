@@ -22,16 +22,16 @@ from jnv_cli.utils import join_values, logger
 def _open_connection(
     tui: TUI, olt_label: str
 ) -> tuple[SSHClient | TelnetClient | None, DatacomOLT | FiberhomeOLT | None]:
-    if DatacomOLT.is_ssh_olt(olt=olt_label):
-        hostname = DatacomOLT.OLT_SSH_HOSTNAMES[olt_label]
+    if DatacomOLT.is_datacom_olt(olt=olt_label):
+        hostname = DatacomOLT.DATACOM_HOSTNAMES[olt_label]
         tui.show_loading(
             context=[f"OLT: {olt_label}", f"Conectando via SSH a {hostname}..."]
         )
         client = SSHClient(hostname=hostname)
         return client, DatacomOLT(ssh_client=client)
 
-    if FiberhomeOLT.is_telnet_olt(olt_label):
-        hostname = FiberhomeOLT.OLT_TELNET_HOSTNAMES[olt_label]
+    if FiberhomeOLT.is_fiberhome_olt(olt_label):
+        hostname = FiberhomeOLT.FIBERHOME_HOSTNAMES[olt_label]
         tui.show_loading(
             context=[f"OLT: {olt_label}", f"Conectando via Telnet a {hostname}..."]
         )

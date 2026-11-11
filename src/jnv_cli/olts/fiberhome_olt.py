@@ -29,8 +29,7 @@ class FiberhomeOLT:
     ONU_STATUS_RE: ClassVar[re.Pattern[str]] = re.compile(
         pattern=r"active|inactive|power down|link loss"
     )
-    TELNET_OLTS: ClassVar[frozenset[str]] = frozenset({"OLT de Acija", "OLT de Newnet"})
-    OLT_TELNET_HOSTNAMES: ClassVar[dict[str, str]] = {
+    FIBERHOME_HOSTNAMES: ClassVar[dict[str, str]] = {
         "OLT de Acija": settings.olt_acija_hostname,
         "OLT de Newnet": settings.olt_newnet_hostname,
     }
@@ -84,8 +83,8 @@ class FiberhomeOLT:
         return filter_count_map
 
     @classmethod
-    def is_telnet_olt(cls, olt: str) -> bool:
-        return olt in cls.TELNET_OLTS
+    def is_fiberhome_olt(cls, olt: str) -> bool:
+        return olt in cls.FIBERHOME_HOSTNAMES
 
     def get_onu_label(self, onu: ONUFiberhome, status_width: int = 0) -> str:
         onu_label = onu.label

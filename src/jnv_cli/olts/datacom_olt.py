@@ -21,8 +21,8 @@ class DatacomOLT:
     ONU_RE: ClassVar[re.Pattern[str]] = re.compile(
         pattern=r"\d+/\d+/\d+\s+\d+\s+\w{12}\s+(Up|Down)\s+\w+\s{0,}\S{0,}"
     )
-    GPON_INTERFACE_RE: ClassVar[re.Pattern[str]] = re.compile(r"gpon-\d+/\d+/\d+/(\d+)")
-    OLT_SSH_HOSTNAMES: ClassVar[dict[str, str]] = {
+    GPON_RE: ClassVar[re.Pattern[str]] = re.compile(pattern=r"gpon-\d+/\d+/\d+/(\d+)")
+    DATACOM_HOSTNAMES: ClassVar[dict[str, str]] = {
         "OLT de Itaitú": settings.olt_itaitu_hostname,
         "OLT de Jacobina III": settings.olt_jac_3_hostname,
         "OLT de Lajes do Batata": settings.olt_lajes_hostname,
@@ -39,8 +39,8 @@ class DatacomOLT:
         return stdout.splitlines() or ["(Sem alarmes)"]
 
     @classmethod
-    def is_ssh_olt(cls, olt: str) -> bool:
-        return olt in cls.OLT_SSH_HOSTNAMES
+    def is_datacom_olt(cls, olt: str) -> bool:
+        return olt in cls.DATACOM_HOSTNAMES
 
     def get_onu_label(self, onu: ONUDatacom) -> str:
         onu_label = onu.label
@@ -95,7 +95,7 @@ class DatacomOLT:
         for line in alarm_lines:
             if not code_re.search(string=line):
                 continue
-            match = self.GPON_INTERFACE_RE.search(string=line)
+            match = self.GPON_RE.search(string=line)
             if match:
                 onu_ids.add(int(match.group(1)))
 
