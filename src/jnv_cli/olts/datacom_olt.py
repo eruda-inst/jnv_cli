@@ -1,10 +1,10 @@
 import re
-from dataclasses import dataclass
 from typing import ClassVar
 
 from jnv_cli.clients.ssh_client import SSHClient
 from jnv_cli.config import settings
 from jnv_cli.types.olt_names import OLTNames
+from jnv_cli.types.onu import ONUDatacom
 from jnv_cli.utils import NONE_SUBSTITUTE, SERIAL_FILTER_SENTINEL, join_values, numberfy
 
 DATACOM_ALARM_FILTER_CODES = (
@@ -63,15 +63,6 @@ DATACOM_ALARM_FILTERS = [
     (DATACOM_ALARM_FILTER_CODES[i], DATACOM_ALARM_FILTER_LABELS[i])
     for i in range(len(DATACOM_ALARM_FILTER_LABELS))
 ]
-
-
-@dataclass
-class ONUDatacom:
-    id: int
-    label: str
-    status: str
-    serial: str
-    name: str
 
 
 class DatacomOLT:

@@ -1,10 +1,10 @@
 import re
-from dataclasses import dataclass
 from typing import ClassVar
 
 from jnv_cli.clients.telnet_client import TelnetClient
 from jnv_cli.config import settings
 from jnv_cli.types.olt_names import OLTNames
+from jnv_cli.types.onu import ONUFiberhome
 from jnv_cli.utils import NONE_SUBSTITUTE, SERIAL_FILTER_SENTINEL, join_values, numberfy
 
 FIBERHOME_ALARM_FILTER_CODES = (
@@ -27,14 +27,6 @@ FIBERHOME_ALARM_FILTERS = [
     (FIBERHOME_ALARM_FILTER_CODES[i], FIBERHOME_ALARM_FILTER_LABELS[i])
     for i in range(len(FIBERHOME_ALARM_FILTER_LABELS))
 ]
-
-
-@dataclass
-class ONUFiberhome:
-    id: int
-    label: str
-    status: str
-    serial: str
 
 
 class FiberhomeOLT:
