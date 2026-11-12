@@ -109,7 +109,8 @@ class DatacomOLT:
     def is_datacom_olt(cls, olt: str) -> bool:
         return olt in cls.DATACOM_HOSTNAMES
 
-    def get_onu_label(self, onu: ONUDatacom) -> str:
+    @staticmethod
+    def get_onu_label(onu: ONUDatacom) -> str:
         return join_values(values=[onu.label, onu.serial, onu.status, onu.name])
 
     def get_onus(self, pon: str = "PON 001") -> list[ONUDatacom]:
@@ -149,20 +150,21 @@ class DatacomOLT:
 
         return onus
 
+    @classmethod
     def get_onu_ids_with_alarm(
-        self, alarm_lines: list[str], alarm_code: str
-    ) -> set[int]:
-        onu_ids: set[int] = set()
+        cls, alarm_lines: list[str], alarm_code: str
+    ) -> frozenset[int]:
+        onu_ids = set()
         code_re = re.compile(rf"\b{re.escape(alarm_code)}\b")
 
         for line in alarm_lines:
             if not code_re.search(string=line):
                 continue
-            match = self._GPON_RE.search(string=line)
+            match = cls._GPON_RE.search(string=line)
             if match:
                 onu_ids.add(int(match.group(1)))
 
-        return onu_ids
+        return frozenset(onu_ids)
 
     def get_onu_alarms(self, pon: str = "PON 001", onu: str = "ONU 000") -> list[str]:
         pon_number = numberfy(value=pon)

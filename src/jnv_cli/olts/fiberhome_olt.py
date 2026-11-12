@@ -50,8 +50,20 @@ class FiberhomeOLT:
     def __init__(self, telnet_client: TelnetClient) -> None:
         self.client = telnet_client
 
+    def _run_commands(self, commands: list[str]) -> list[str]:
+        last_command = commands[0]
+
+        if len(commands) > 1:
+            last_command = commands[-1]
+            commands.pop(-1)
+            for command in commands:
+                self.client.send_command(command=command)
+
+        output = self.client.send_command(command=last_command)
+        return output.splitlines()
+
     def _get_onu_status(self, slot_num: int, pon_num: int) -> dict[int, str]:
-        commands = ["cd /", "cd onu", f"show onu_state slot {slot_num} pon {pon_num}"]
+        commands = ["cd /onu", f"show onu_state slot {slot_num} pon {pon_num}"]
         raw_lines = self._run_commands(commands=commands)
         status_map = {}
 
@@ -73,19 +85,8 @@ class FiberhomeOLT:
 
         return status_map
 
-    def _run_commands(self, commands: list[str]) -> list[str]:
-        last_command = commands[0]
-
-        if len(commands) > 1:
-            last_command = commands[-1]
-            commands.pop(-1)
-            for command in commands:
-                self.client.send_command(command=command)
-
-        output = self.client.send_command(command=last_command)
-        return output.splitlines()
-
-    def get_filter_count_map(self, onus: list[ONUFiberhome]) -> dict[str, int]:
+    @staticmethod
+    def get_filter_count_map(onus: list[ONUFiberhome]) -> dict[str, int]:
         def get_filter_count(onus: list[ONUFiberhome], filter: str) -> int:
             return len([onu for onu in onus if onu.status == filter])
 
@@ -99,7 +100,8 @@ class FiberhomeOLT:
     def is_fiberhome_olt(cls, olt: str) -> bool:
         return olt in cls.FIBERHOME_HOSTNAMES
 
-    def get_onu_label(self, onu: ONUFiberhome, status_width: int = 0) -> str:
+    @staticmethod
+    def get_onu_label(onu: ONUFiberhome, status_width: int = 0) -> str:
         onu_label = onu.label
         onu_status = onu.status.ljust(status_width)
         onu_serial = onu.serial
@@ -130,23 +132,21 @@ class FiberhomeOLT:
                 result = raw_result.strip()
                 parts = result.split()
 
-                onu_id = int(parts[2])
-                onu_status = status_map.get(onu_id, NONE_SUBSTITUTE)
-                onu_serial = parts[7]
+                id = int(parts[2])
+                status = status_map.get(id, NONE_SUBSTITUTE)
+                serial = parts[7]
 
                 onus.append(
                     ONUFiberhome(
-                        id=onu_id,
-                        label=f"ONU {onu_id:03d}",
-                        status=onu_status,
-                        serial=onu_serial,
+                        id=id, label=f"ONU {id:03d}", status=status, serial=serial
                     )
                 )
 
         return onus
 
+    @staticmethod
     def filter_onus(
-        self, onus: list[ONUFiberhome], filter_code: str | None
+        onus: list[ONUFiberhome], filter_code: str | None
     ) -> list[ONUFiberhome]:
         if filter_code is None:
             return onus
