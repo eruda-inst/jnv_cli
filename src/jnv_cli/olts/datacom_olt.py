@@ -5,7 +5,7 @@ from jnv_cli.clients.ssh_client import SSHClient
 from jnv_cli.config import settings
 from jnv_cli.types.olt_names import OLTNames
 from jnv_cli.types.onu import ONUDatacom
-from jnv_cli.utils import NONE_SUBSTITUTE, SERIAL_FILTER_SENTINEL, join_values, numberfy
+from jnv_cli.utils import NONE_SUBSTITUTE, SERIAL_FILTER_SENTINEL, numberfy
 
 DATACOM_ALARM_FILTER_CODES = (
     None,
@@ -108,10 +108,6 @@ class DatacomOLT:
     @classmethod
     def is_datacom_olt(cls, olt: str) -> bool:
         return olt in cls.DATACOM_HOSTNAMES
-
-    @staticmethod
-    def get_onu_label(onu: ONUDatacom) -> str:
-        return join_values(values=[onu.label, onu.serial, onu.status, onu.name])
 
     def get_onus(self, pon: str = "PON 001") -> list[ONUDatacom]:
         pon_number = numberfy(value=pon)

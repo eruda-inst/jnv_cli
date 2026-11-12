@@ -5,7 +5,7 @@ from jnv_cli.clients.telnet_client import TelnetClient
 from jnv_cli.config import settings
 from jnv_cli.types.olt_names import OLTNames
 from jnv_cli.types.onu import ONUFiberhome
-from jnv_cli.utils import NONE_SUBSTITUTE, SERIAL_FILTER_SENTINEL, join_values, numberfy
+from jnv_cli.utils import NONE_SUBSTITUTE, SERIAL_FILTER_SENTINEL, numberfy
 
 FIBERHOME_ALARM_FILTER_CODES = (
     None,
@@ -99,15 +99,6 @@ class FiberhomeOLT:
     @classmethod
     def is_fiberhome_olt(cls, olt: str) -> bool:
         return olt in cls.FIBERHOME_HOSTNAMES
-
-    @staticmethod
-    def get_onu_label(onu: ONUFiberhome, status_width: int = 0) -> str:
-        onu_label = onu.label
-        onu_status = onu.status.ljust(status_width)
-        onu_serial = onu.serial
-        if onu_serial:
-            return join_values(values=[onu_label, onu_status, onu_serial])
-        return join_values(values=[onu_label, onu_status])
 
     def get_onus(
         self, slot: str = "SLOT 001", pon: str = "PON 001"

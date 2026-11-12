@@ -7,7 +7,7 @@ from jnv_cli.olts.fiberhome_olt import FIBERHOME_ALARM_FILTERS, FiberhomeOLT
 from jnv_cli.tui import TUI
 from jnv_cli.types.olt_names import OLTNames
 from jnv_cli.utils import SERIAL_FILTER_SENTINEL
-from jnv_cli.view.alarm_filter_menu import build_filter_labels
+from jnv_cli.view.menus import build_filter_labels, build_onu_labels
 
 COMMANDS = ("Consultar alarmes das ONUs", "Consultar alarmes da PON")
 OLTS = {
@@ -313,8 +313,7 @@ def main(stdscr: curses.window) -> None:
                                     continue
 
                                 filtered_onu_labels = [
-                                    selected_olt.get_onu_label(onu=onu)  # type: ignore[arg-type]
-                                    for onu in filtered_onus
+                                    build_onu_labels(onu=onu) for onu in filtered_onus
                                 ]
                                 filter_ctx = ctx_base + [filter_ctx_line]
 
@@ -428,16 +427,8 @@ def main(stdscr: curses.window) -> None:
                                     )
                                     continue
 
-                                status_width = max(
-                                    (len(o.status) for o in filtered_onus),  # type: ignore
-                                    default=0,
-                                )
                                 labels = [
-                                    selected_olt.get_onu_label(
-                                        onu=onu,  # type: ignore
-                                        status_width=status_width,
-                                    )
-                                    for onu in filtered_onus
+                                    build_onu_labels(onu=onu) for onu in filtered_onus
                                 ]
                                 filter_ctx = ctx_base + [filter_ctx_line]
 
