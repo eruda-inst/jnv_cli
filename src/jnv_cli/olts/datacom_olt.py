@@ -1,4 +1,5 @@
 import re
+from dataclasses import replace
 from typing import ClassVar
 
 from jnv_cli.clients.ssh_client import SSHClient
@@ -104,12 +105,11 @@ class DatacomOLT:
             if match is not None:
                 result_raw = match.group()
                 result = result_raw.strip()
-
                 parts = result.split()
 
                 onu_id = int(parts[1])
                 onu_serial = parts[2]
-                ost = parts[3].ljust(len("Down"))
+                ost = parts[3]
                 name = NONE_SUBSTITUTE
 
                 if len(parts) >= 6:
@@ -118,6 +118,9 @@ class DatacomOLT:
                 onus.append(
                     ONUDatacom(id=onu_id + 1, serial=onu_serial, ost=ost, name=name)
                 )
+
+            max_ost = max([len(onu.ost) for onu in onus], default=0)
+            onus = [replace(onu, ost=onu.ost.ljust(max_ost)) for onu in onus]
 
         return onus
 

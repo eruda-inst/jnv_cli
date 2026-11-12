@@ -1,4 +1,5 @@
 import re
+from dataclasses import replace
 from typing import ClassVar
 
 from jnv_cli.clients.telnet_client import TelnetClient
@@ -113,11 +114,14 @@ class FiberhomeOLT:
                 parts = result.split()
 
                 id = int(parts[2])
-                ost = "Up".ljust(len("Down")) if parts[6] == "up" else "Down"
+                ost = "Up" if parts[6] == "up" else "Down"
                 serial = parts[7]
                 status = status_map.get(id, NONE_SUBSTITUTE)
 
                 onus.append(ONUFiberhome(id=id, ost=ost, serial=serial, status=status))
+
+        max_ost = max([len(onu.ost) for onu in onus], default=0)
+        onus = [replace(onu, ost=onu.ost.ljust(max_ost)) for onu in onus]
 
         return onus
 

@@ -8,12 +8,20 @@ def build_filter_labels(
     count_map: dict[str, int], filters: Sequence[tuple[str | None, str]]
 ) -> list[str]:
     max_code = max(
-        len(code) for code, _ in filters if code not in (None, SERIAL_FILTER_SENTINEL)
+        (
+            len(code)
+            for code, _ in filters
+            if code not in (None, SERIAL_FILTER_SENTINEL)
+        ),
+        default=0,
     )
     max_label = max(
-        len(label)
-        for _, label in filters
-        if label not in (None, SERIAL_FILTER_SENTINEL)
+        (
+            len(label)
+            for _, label in filters
+            if label not in (None, SERIAL_FILTER_SENTINEL)
+        ),
+        default=0,
     )
     return [
         label
