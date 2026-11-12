@@ -6,7 +6,7 @@ from jnv_cli.olts.datacom_olt import DATACOM_ALARM_FILTERS, DatacomOLT
 from jnv_cli.olts.fiberhome_olt import FIBERHOME_ALARM_FILTERS, FiberhomeOLT
 from jnv_cli.tui import TUI
 from jnv_cli.types.olt_names import OLTNames
-from jnv_cli.utils import SERIAL_FILTER_SENTINEL
+from jnv_cli.utils import SERIAL_FILTER_SENTINEL, count_alarms_by_filter
 from jnv_cli.view.menus import build_filter_labels, build_onu_labels
 
 COMMANDS = ("Consultar alarmes das ONUs", "Consultar alarmes da PON")
@@ -229,10 +229,11 @@ def main(stdscr: curses.window) -> None:
                             pon_alarms_cache: list[str] | None = None
 
                             while True:
+                                pon_alarms = selected_olt.get_pon_alarms(pon=pon_label)
                                 filter_labels = build_filter_labels(
                                     filters=DATACOM_ALARM_FILTERS,
-                                    count_map=selected_olt.get_filter_count_map(
-                                        pon=pon_label
+                                    count_map=count_alarms_by_filter(
+                                        alarms=pon_alarms, filters=DATACOM_ALARM_FILTERS
                                     ),
                                 )
                                 idx_filter = tui.select_menu(
@@ -349,10 +350,14 @@ def main(stdscr: curses.window) -> None:
 
                         elif isinstance(selected_olt, FiberhomeOLT):
                             while True:
+                                pon_alarms = selected_olt.get_pon_alarms(
+                                    pon=pon_label, slot=slot_label
+                                )
                                 filter_labels = build_filter_labels(
                                     filters=FIBERHOME_ALARM_FILTERS,
-                                    count_map=selected_olt.get_filter_count_map(
-                                        onus=onus  # type: ignore
+                                    count_map=count_alarms_by_filter(
+                                        alarms=pon_alarms,
+                                        filters=FIBERHOME_ALARM_FILTERS,
                                     ),
                                 )
                                 idx_filter = tui.select_menu(

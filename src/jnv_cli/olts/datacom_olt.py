@@ -86,26 +86,6 @@ class DatacomOLT:
         stdout = self.client.get_stdout()
         return stdout.splitlines() or ["(Sem alarmes)"]
 
-    def get_filter_count_map(self, pon: str = "PON 001") -> dict[str, int]:
-        def get_filter_count(alarms: list[str], filter: str) -> int:
-            return len([alarm for alarm in alarms if filter == alarm])
-
-        raw_lines = self.get_pon_alarms(pon=pon)
-        alarms = []
-        filter_count_map = {}
-
-        for raw_line in raw_lines:
-            line = raw_line.strip()
-            parts = line.split()
-            if len(parts) >= 3:
-                status = parts[2]
-                alarms.append(status)
-
-        for code in DATACOM_ALARM_FILTER_CODES[2::]:
-            filter_count_map[code] = get_filter_count(alarms=alarms, filter=code)
-
-        return filter_count_map
-
     @classmethod
     def is_datacom_olt(cls, olt: str) -> bool:
         return olt in cls.DATACOM_HOSTNAMES

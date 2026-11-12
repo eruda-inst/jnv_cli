@@ -85,17 +85,6 @@ class FiberhomeOLT:
 
         return status_map
 
-    @staticmethod
-    def get_filter_count_map(onus: list[ONUFiberhome]) -> dict[str, int]:
-        def get_filter_count(onus: list[ONUFiberhome], filter: str) -> int:
-            return len([onu for onu in onus if onu.status == filter])
-
-        filter_count_map = {}
-        for code in FIBERHOME_ALARM_FILTER_CODES[2::]:
-            filter_count_map[code] = get_filter_count(onus=onus, filter=code)
-
-        return filter_count_map
-
     @classmethod
     def is_fiberhome_olt(cls, olt: str) -> bool:
         return olt in cls.FIBERHOME_HOSTNAMES
