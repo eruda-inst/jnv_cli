@@ -31,6 +31,6 @@ def build_filter_labels(
 
 def build_onu_labels(onu: ONUDatacom | ONUFiberhome) -> str:
     if isinstance(onu, ONUDatacom):
-        return join_values(values=[onu.label, onu.serial, onu.status, onu.name])
+        return join_values(values=[onu.label, onu.serial, onu.ost, onu.name])
     elif isinstance(onu, ONUFiberhome):
-        return join_values(values=[onu.label, onu.serial, onu.status])
+        return join_values(values=[onu.label, onu.serial, onu.ost, onu.status])

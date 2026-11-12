@@ -97,8 +97,9 @@ class DatacomOLT:
         for raw_line in raw_lines:
             line = raw_line.strip()
             parts = line.split()
-            status = parts[2]
-            alarms.append(status)
+            if len(parts) >= 3:
+                status = parts[2]
+                alarms.append(status)
 
         for code in DATACOM_ALARM_FILTER_CODES[2::]:
             filter_count_map[code] = get_filter_count(alarms=alarms, filter=code)
@@ -128,7 +129,7 @@ class DatacomOLT:
 
                 onu_id = int(parts[1])
                 onu_serial = parts[2]
-                status = parts[3].ljust(4)
+                ost = parts[3].ljust(len("Down"))
                 name = NONE_SUBSTITUTE
 
                 if len(parts) >= 6:
@@ -139,7 +140,7 @@ class DatacomOLT:
                         id=onu_id + 1,
                         label=f"ONU {onu_id:03d}",
                         serial=onu_serial,
-                        status=status,
+                        ost=ost,
                         name=name,
                     )
                 )

@@ -124,12 +124,17 @@ class FiberhomeOLT:
                 parts = result.split()
 
                 id = int(parts[2])
-                status = status_map.get(id, NONE_SUBSTITUTE)
+                ost = "Up".ljust(len("Down")) if parts[6] == "up" else "Down"
                 serial = parts[7]
+                status = status_map.get(id, NONE_SUBSTITUTE)
 
                 onus.append(
                     ONUFiberhome(
-                        id=id, label=f"ONU {id:03d}", status=status, serial=serial
+                        id=id,
+                        label=f"ONU {id:03d}",
+                        ost=ost,
+                        serial=serial,
+                        status=status,
                     )
                 )
 

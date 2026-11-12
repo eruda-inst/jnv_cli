@@ -5,8 +5,8 @@ from dataclasses import dataclass
 class ONUDatacom:
     id: int
     label: str
-    status: str
     serial: str
+    ost: str
     name: str
 
 
@@ -14,5 +14,6 @@ class ONUDatacom:
 class ONUFiberhome:
     id: int
     label: str
-    status: str
+    ost: str
     serial: str
+    status: str
