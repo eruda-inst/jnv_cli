@@ -128,15 +128,7 @@ class FiberhomeOLT:
                 serial = parts[7]
                 status = status_map.get(id, NONE_SUBSTITUTE)
 
-                onus.append(
-                    ONUFiberhome(
-                        id=id,
-                        label=f"ONU {id:03d}",
-                        ost=ost,
-                        serial=serial,
-                        status=status,
-                    )
-                )
+                onus.append(ONUFiberhome(id=id, ost=ost, serial=serial, status=status))
 
         return onus
 

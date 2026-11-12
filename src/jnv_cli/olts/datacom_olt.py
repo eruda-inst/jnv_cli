@@ -136,13 +136,7 @@ class DatacomOLT:
                     name = parts[5]
 
                 onus.append(
-                    ONUDatacom(
-                        id=onu_id + 1,
-                        label=f"ONU {onu_id:03d}",
-                        serial=onu_serial,
-                        ost=ost,
-                        name=name,
-                    )
+                    ONUDatacom(id=onu_id + 1, serial=onu_serial, ost=ost, name=name)
                 )
 
         return onus
