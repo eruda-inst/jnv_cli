@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "paramiko>=5.1.0",
-    "pydantic>=2.14.2",
+    "pydantic>=2.14.3",
     "pydantic-settings>=2.16.2",
     "windows-curses>=2.4.2 ; sys_platform == 'win32'",
 ]
@@ -20,5 +20,5 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
-    "ruff>=0.17.3",
+    "ruff>=0.17.5",
 ]
