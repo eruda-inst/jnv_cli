@@ -2,21 +2,12 @@ import curses
 
 from jnv_cli.clients.ssh_client import SSHClient
 from jnv_cli.clients.telnet_client import TelnetClient
-from jnv_cli.olts.datacom_olt import (
-    DATACOM_ALARM_FILTER_CODES,
-    DATACOM_ALARM_FILTER_LABELS,
-    DATACOM_ALARM_FILTERS,
-    DatacomOLT,
-)
-from jnv_cli.olts.fiberhome_olt import (
-    FIBERHOME_ALARM_FILTER_CODES,
-    FIBERHOME_ALARM_FILTER_LABELS,
-    FIBERHOME_ALARM_FILTERS,
-    FiberhomeOLT,
-)
+from jnv_cli.olts.datacom_olt import DATACOM_ALARM_FILTERS, DatacomOLT
+from jnv_cli.olts.fiberhome_olt import FIBERHOME_ALARM_FILTERS, FiberhomeOLT
 from jnv_cli.tui import TUI
 from jnv_cli.types.olt_names import OLTNames
-from jnv_cli.utils import SERIAL_FILTER_SENTINEL, join_values
+from jnv_cli.utils import SERIAL_FILTER_SENTINEL
+from jnv_cli.view.alarm_filter_menu import build_filter_labels
 
 COMMANDS = ("Consultar alarmes das ONUs", "Consultar alarmes da PON")
 OLTS = {
@@ -238,29 +229,12 @@ def main(stdscr: curses.window) -> None:
                             pon_alarms_cache: list[str] | None = None
 
                             while True:
-                                max_code_len = max(
-                                    len(code)
-                                    for code in DATACOM_ALARM_FILTER_CODES[2::]
+                                filter_labels = build_filter_labels(
+                                    filters=DATACOM_ALARM_FILTERS,
+                                    count_map=selected_olt.get_filter_count_map(
+                                        pon=pon_label
+                                    ),
                                 )
-                                max_label_len = max(
-                                    len(label)
-                                    for label in DATACOM_ALARM_FILTER_LABELS[2::]
-                                )
-                                filter_count_map = selected_olt.get_filter_count_map(
-                                    pon=pon_label
-                                )
-                                filter_labels = [
-                                    label
-                                    if code in (None, SERIAL_FILTER_SENTINEL)
-                                    else join_values(
-                                        values=[
-                                            code.ljust(max_code_len),
-                                            label.ljust(max_label_len),
-                                            f"{filter_count_map[code]:03d}",
-                                        ]
-                                    )
-                                    for code, label in DATACOM_ALARM_FILTERS
-                                ]
                                 idx_filter = tui.select_menu(
                                     question="Selecione o filtro de alarme",
                                     options=filter_labels,
@@ -376,29 +350,12 @@ def main(stdscr: curses.window) -> None:
 
                         elif isinstance(selected_olt, FiberhomeOLT):
                             while True:
-                                max_code_len = max(
-                                    len(code)
-                                    for code in FIBERHOME_ALARM_FILTER_CODES[2::]
+                                filter_labels = build_filter_labels(
+                                    filters=FIBERHOME_ALARM_FILTERS,
+                                    count_map=selected_olt.get_filter_count_map(
+                                        onus=onus  # type: ignore
+                                    ),
                                 )
-                                max_label_len = max(
-                                    len(label)
-                                    for label in FIBERHOME_ALARM_FILTER_LABELS[2::]
-                                )
-                                filter_count_map = selected_olt.get_filter_count_map(
-                                    onus=onus  # type: ignore
-                                )
-                                filter_labels = [
-                                    label
-                                    if code is None or code == SERIAL_FILTER_SENTINEL
-                                    else join_values(
-                                        values=[
-                                            code.ljust(max_code_len),
-                                            label.ljust(max_label_len),
-                                            f"{filter_count_map[code]:03d}",
-                                        ]
-                                    )
-                                    for code, label in FIBERHOME_ALARM_FILTERS
-                                ]
                                 idx_filter = tui.select_menu(
                                     question="Selecione o filtro de status",
                                     options=filter_labels,

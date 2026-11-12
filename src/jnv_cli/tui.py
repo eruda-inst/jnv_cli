@@ -1,7 +1,7 @@
 import curses
 from collections.abc import Sequence
 
-TITLE = "JNV (Jacobina Network Viewer) v1.11.9"
+TITLE = "JNV (Jacobina Network Viewer) v1.12.1"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 
 
