@@ -6,7 +6,7 @@ from jnv_cli.clients.telnet_client import TelnetClient
 from jnv_cli.config import settings
 from jnv_cli.types.olt_names import OLTNames
 from jnv_cli.types.onu import ONUFiberhome
-from jnv_cli.utils import NONE_SUBSTITUTE, SERIAL_FILTER_SENTINEL, numberfy
+from jnv_cli.utils import NONE_LABEL, SERIAL_FILTER_SENTINEL, numberfy
 
 FIBERHOME_ALARM_FILTER_CODES = (
     None,
@@ -77,7 +77,7 @@ class FiberhomeOLT:
                 parts = result.split()
                 onu_id = int(parts[5])
 
-                onu_status = NONE_SUBSTITUTE
+                onu_status = NONE_LABEL
                 match = self._ONU_STATUS_RE.search(string=result)
                 if match is not None:
                     onu_status = match.group()
@@ -116,7 +116,7 @@ class FiberhomeOLT:
                 id = int(parts[2])
                 ost = "Up" if parts[6] == "up" else "Down"
                 serial = parts[7]
-                status = status_map.get(id, NONE_SUBSTITUTE)
+                status = status_map.get(id, NONE_LABEL)
 
                 onus.append(ONUFiberhome(id=id, ost=ost, serial=serial, status=status))
 
@@ -153,7 +153,7 @@ class FiberhomeOLT:
                 result = raw_result.strip().removesuffix(".")
                 alarms.append(result)
 
-        return alarms if len(alarms) else ["(Sem alarmes)"]
+        return alarms if len(alarms) else [NO_ALARM_LABEL]
 
     def get_onu_alarms(
         self, slot: str = "SLOT 001", pon: str = "PON 001", onu: int | str = 1
@@ -178,4 +178,4 @@ class FiberhomeOLT:
                 result = raw_result.strip()
                 alarms.append(result)
 
-        return alarms if len(alarms) else ["(Sem alarmes)"]
+        return alarms if len(alarms) else [NO_ALARM_LABEL]

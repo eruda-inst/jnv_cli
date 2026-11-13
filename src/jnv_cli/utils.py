@@ -1,7 +1,8 @@
 from collections.abc import Sequence
 
-NONE_SUBSTITUTE = "---"
+NONE_LABEL = "---"
 SERIAL_FILTER_SENTINEL = "__SN__"
+NO_ALARM_LABEL = "(Sem alarmes)"
 
 
 def join_values(values: list[str], separator: str = " | ") -> str:

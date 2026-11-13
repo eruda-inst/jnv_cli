@@ -6,7 +6,7 @@ from jnv_cli.olts.datacom_olt import DATACOM_ALARM_FILTERS, DatacomOLT
 from jnv_cli.olts.fiberhome_olt import FIBERHOME_ALARM_FILTERS, FiberhomeOLT
 from jnv_cli.tui import TUI
 from jnv_cli.types.olt_names import OLTNames
-from jnv_cli.utils import SERIAL_FILTER_SENTINEL, count_alarms_by_filter
+from jnv_cli.utils import NO_ALARM_LABEL, SERIAL_FILTER_SENTINEL, count_alarms_by_filter
 from jnv_cli.view.menus import build_filter_labels, build_onu_labels
 
 COMMANDS = ("Consultar alarmes das ONUs", "Consultar alarmes da PON")
@@ -215,7 +215,7 @@ def main(stdscr: curses.window) -> None:
                         else:
                             onus = selected_olt.get_onus(slot=slot_label, pon=pon_label)
 
-                        if not onus or onus == ["(Sem alarmes)"]:
+                        if not onus or onus == [NO_ALARM_LABEL]:
                             tui.show_result(
                                 title=(
                                     f"{command_label} — {olt_label} / "
