@@ -6,7 +6,7 @@ from jnv_cli.clients.telnet_client import TelnetClient
 from jnv_cli.config import settings
 from jnv_cli.types.olt_names import OLTNames
 from jnv_cli.types.onu import ONUFiberhome
-from jnv_cli.utils import NONE_LABEL, SERIAL_FILTER_SENTINEL, numberfy
+from jnv_cli.utils import NO_ALARM_LABEL, NONE_LABEL, SERIAL_FILTER_SENTINEL, numberfy
 
 FIBERHOME_ALARM_FILTER_CODES = (
     None,
