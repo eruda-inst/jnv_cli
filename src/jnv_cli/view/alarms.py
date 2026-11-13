@@ -5,7 +5,7 @@ from jnv_cli.utils import NO_ALARM_LABEL, NONE_LABEL
 
 
 @dataclass
-class PONAlarm:
+class DatacomPONAlarm:
     type: str
     source_value: str
     name: str
@@ -57,7 +57,7 @@ def build_datacom_pon_alarms(raw_lines: list[str]) -> list[str]:
             time = match_time.group()
 
         alarms.append(
-            PONAlarm(
+            DatacomPONAlarm(
                 type=type,
                 source_value=source_value,
                 name=name,

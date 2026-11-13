@@ -121,7 +121,7 @@ class DatacomOLT:
                     name = parts[5]
 
                 onus.append(
-                    ONUDatacom(id=onu_id + 1, serial=onu_serial, ost=ost, name=name)
+                    ONUDatacom(id=onu_id, serial=onu_serial, ost=ost, name=name)
                 )
 
             max_ost = max([len(onu.ost) for onu in onus], default=0)
@@ -147,7 +147,7 @@ class DatacomOLT:
 
     def get_onu_alarms(self, pon: str = "PON 001", onu: str = "ONU 000") -> list[str]:
         pon_number = numberfy(value=pon)
-        onu_number = numberfy(value=onu) - 1
+        onu_number = numberfy(value=onu)
         command = (
             f'show alarm | include "gpon-1/1/{pon_number}/{onu_number} " | nomore | tab'
         )
