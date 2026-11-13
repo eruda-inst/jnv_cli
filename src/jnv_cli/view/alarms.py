@@ -15,7 +15,7 @@ class DatacomPONAlarm:
     severity: str
 
 
-def build_datacom_pon_alarms(raw_lines: list[str]) -> list[str]:
+def build_datacom_alarms(raw_lines: list[str]) -> list[str]:
     alarms = []
 
     if raw_lines == [NO_ALARM_LABEL]:

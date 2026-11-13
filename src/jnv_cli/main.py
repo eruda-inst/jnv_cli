@@ -7,7 +7,7 @@ from jnv_cli.olts.fiberhome_olt import FIBERHOME_ALARM_FILTERS, FiberhomeOLT
 from jnv_cli.tui import TUI
 from jnv_cli.types.olt_names import OLTNames
 from jnv_cli.utils import NO_ALARM_LABEL, SERIAL_FILTER_SENTINEL, count_alarms_by_filter
-from jnv_cli.view.alarms import build_datacom_pon_alarms
+from jnv_cli.view.alarms import build_datacom_alarms
 from jnv_cli.view.menus import build_filter_labels, build_onu_labels
 
 COMMANDS = ("Consultar alarmes das ONUs", "Consultar alarmes da PON")
@@ -196,7 +196,7 @@ def main(stdscr: curses.window) -> None:
                                 )
                             else:
                                 raw_lines = selected_olt.get_pon_alarms(pon=pon_label)
-                                lines = build_datacom_pon_alarms(raw_lines=raw_lines)
+                                lines = build_datacom_alarms(raw_lines=raw_lines)
                             tui.show_result(
                                 title=(
                                     f"{command_label} — {olt_label} / "
@@ -232,7 +232,7 @@ def main(stdscr: curses.window) -> None:
 
                             while True:
                                 raw_lines = selected_olt.get_pon_alarms(pon=pon_label)
-                                pon_alarms = build_datacom_pon_alarms(raw_lines)
+                                pon_alarms = build_datacom_alarms(raw_lines)
                                 filter_labels = build_filter_labels(
                                     filters=DATACOM_ALARM_FILTERS,
                                     count_map=count_alarms_by_filter(
@@ -291,7 +291,7 @@ def main(stdscr: curses.window) -> None:
                                         raw_lines = selected_olt.get_pon_alarms(
                                             pon=pon_label
                                         )
-                                        pon_alarms_cache = build_datacom_pon_alarms(
+                                        pon_alarms_cache = build_datacom_alarms(
                                             raw_lines=raw_lines
                                         )
                                     alarm_onu_ids = selected_olt.get_onu_ids_with_alarm(
@@ -341,10 +341,11 @@ def main(stdscr: curses.window) -> None:
                                     tui.show_loading(
                                         context=filter_ctx + [f"ONU: {onu.label}"]
                                     )
-                                    lines = selected_olt.get_onu_alarms(
+                                    raw_lines = selected_olt.get_onu_alarms(
                                         pon=pon_label,
                                         onu=str(onu.id),
                                     )
+                                    lines = build_datacom_alarms(raw_lines=raw_lines)
                                     tui.show_result(
                                         title=(
                                             f"{command_label} — {olt_label} / "
