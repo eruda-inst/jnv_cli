@@ -6,7 +6,7 @@ from jnv_cli.clients.telnet_client import TelnetClient
 from jnv_cli.config import settings
 from jnv_cli.types.olt_names import OLTNames
 from jnv_cli.types.onu import ONUFiberhome
-from jnv_cli.utils import NO_ALARM_LABEL, NONE_LABEL, SERIAL_FILTER_SENTINEL, numberfy
+from jnv_cli.utils import NONE_LABEL, SERIAL_FILTER_SENTINEL, numberfy
 
 FIBERHOME_ALARM_FILTER_CODES = (
     None,
@@ -143,17 +143,15 @@ class FiberhomeOLT:
         ]
 
         raw_lines = self._run_commands(commands=commands)
-        alarms = []
+        alarm_raw_lines = []
 
         for raw_line in raw_lines:
             match = self._PON_ALARM_RE.search(string=raw_line)
 
             if match is not None:
-                raw_result = match.group()
-                result = raw_result.strip().removesuffix(".")
-                alarms.append(result)
+                alarm_raw_lines.append(raw_line)
 
-        return alarms if len(alarms) else [NO_ALARM_LABEL]
+        return alarm_raw_lines
 
     def get_onu_alarms(
         self, slot: str = "SLOT 001", pon: str = "PON 001", onu: int | str = 1
@@ -176,4 +174,4 @@ class FiberhomeOLT:
             if match is not None:
                 alarm_raw_lines.append(raw_line)
 
-        return alarm_raw_lines if len(alarm_raw_lines) else [NO_ALARM_LABEL]
+        return alarm_raw_lines

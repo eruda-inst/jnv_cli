@@ -6,12 +6,7 @@ from jnv_cli.clients.ssh_client import SSHClient
 from jnv_cli.config import settings
 from jnv_cli.types.olt_names import OLTNames
 from jnv_cli.types.onu import ONUDatacom
-from jnv_cli.utils import (
-    NO_ALARM_LABEL,
-    NONE_LABEL,
-    SERIAL_FILTER_SENTINEL,
-    numberfy,
-)
+from jnv_cli.utils import NONE_LABEL, SERIAL_FILTER_SENTINEL, numberfy
 
 DATACOM_ALARM_FILTER_CODES = (
     None,
@@ -90,7 +85,7 @@ class DatacomOLT:
     def _run_command(self, command: str) -> list[str]:
         self.client.execute_command(command=command)
         stdout = self.client.get_stdout()
-        return stdout.splitlines() or [NO_ALARM_LABEL]
+        return stdout.splitlines()
 
     @classmethod
     def is_datacom_olt(cls, olt: str) -> bool:

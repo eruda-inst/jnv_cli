@@ -1,13 +1,99 @@
 import re
 from dataclasses import replace
 
-from jnv_cli.types.alarms import DatacomAlarm, FiberhomeONUAlarm
+from jnv_cli.types.alarms import DatacomAlarm, FiberhomeONUAlarm, FiberhomePONAlarm
 from jnv_cli.utils import NO_ALARM_LABEL, NONE_LABEL
 
 
+def build_fiberhome_pon_alarms(raw_lines: list[str]) -> list[str]:
+    if not raw_lines:
+        return [NO_ALARM_LABEL]
+
+    alarms = []
+
+    for raw_line in raw_lines:
+        line = raw_line.strip().removesuffix(".")
+        parts = line.split()
+
+        slot = NONE_LABEL
+        pon = NONE_LABEL
+        onu = NONE_LABEL
+        status = NONE_LABEL
+
+        if len(parts) >= 2:
+            slot = parts[1]
+
+        if len(parts) >= 4:
+            pon = parts[3]
+
+        if len(parts) >= 6:
+            onu = parts[5]
+
+        STATUS_RE = re.compile(pattern=r"active|inactive|power down|link loss")
+        status_match = STATUS_RE.search(string=line)
+        if status_match is not None:
+            status = status_match.group()
+
+        alarms.append(
+            FiberhomePONAlarm(
+                slot=f"{int(slot):03d}",
+                pon=f"{int(pon):03d}",
+                onu=f"{int(onu):03d}",
+                status=status,
+            )
+        )
+
+    max_slot = max([len(alarm.slot) for alarm in alarms], default=0)
+    max_pon = max([len(alarm.pon) for alarm in alarms], default=0)
+    max_onu = max([len(alarm.onu) for alarm in alarms], default=0)
+    max_status = max([len(alarm.status) for alarm in alarms], default=0)
+
+    h1 = "SLOT"
+    h2 = "PON"
+    h3 = "ONU"
+    h4 = "STATUS"
+
+    if max_slot > len(h1):
+        h1 = h1.ljust(max_slot)
+    else:
+        max_slot = len(h1)
+
+    if max_pon > len(h2):
+        h2 = h2.ljust(max_pon)
+    else:
+        max_pon = len(h2)
+
+    if max_onu > len(h3):
+        h3 = h3.ljust(max_onu)
+    else:
+        max_onu = len(h3)
+
+    if max_status > len(h4):
+        h4 = h4.ljust(max_status)
+    else:
+        max_status = len(h4)
+
+    alarms = [replace(alarm, slot=alarm.slot.ljust(max_slot)) for alarm in alarms]
+    alarms = [replace(alarm, pon=alarm.pon.ljust(max_pon)) for alarm in alarms]
+    alarms = [replace(alarm, onu=alarm.onu.ljust(max_onu)) for alarm in alarms]
+    alarms = [replace(alarm, status=alarm.status.ljust(max_status)) for alarm in alarms]
+
+    hs = f"{h1}   {h2}   {h3}   {h4}"
+    dashes = "-" * len(hs)
+
+    output = []
+    output.append(hs)
+    output.append(dashes)
+
+    for alarm in alarms:
+        output.append(f"{alarm.slot}   {alarm.pon}   {alarm.onu}   {alarm.status}")
+
+    return output
+
+
 def build_fiberhome_onu_alarms(raw_lines: list[str]) -> list[str]:
-    if raw_lines == [NO_ALARM_LABEL]:
-        return raw_lines
+    if not raw_lines:
+        return [NO_ALARM_LABEL]
 
     alarms = []
 
@@ -127,8 +213,8 @@ def build_fiberhome_onu_alarms(raw_lines: list[str]) -> list[str]:
 
 
 def build_datacom_alarms(raw_lines: list[str]) -> list[str]:
-    if raw_lines == [NO_ALARM_LABEL]:
-        return raw_lines
+    if not raw_lines:
+        return [NO_ALARM_LABEL]
 
     alarms = []
 

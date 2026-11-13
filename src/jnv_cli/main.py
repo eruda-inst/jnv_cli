@@ -7,7 +7,11 @@ from jnv_cli.olts.fiberhome_olt import FIBERHOME_ALARM_FILTERS, FiberhomeOLT
 from jnv_cli.tui import TUI
 from jnv_cli.types.olt_names import OLTNames
 from jnv_cli.utils import NO_ALARM_LABEL, SERIAL_FILTER_SENTINEL, count_alarms_by_filter
-from jnv_cli.view.alarms import build_datacom_alarms, build_fiberhome_onu_alarms
+from jnv_cli.view.alarms import (
+    build_datacom_alarms,
+    build_fiberhome_onu_alarms,
+    build_fiberhome_pon_alarms,
+)
 from jnv_cli.view.menus import build_filter_labels, build_onu_labels
 
 COMMANDS = ("Consultar alarmes das ONUs", "Consultar alarmes da PON")
@@ -191,9 +195,10 @@ def main(stdscr: curses.window) -> None:
                         if command_label == "Consultar alarmes da PON":
                             tui.show_loading(context=ctx_base)
                             if isinstance(selected_olt, FiberhomeOLT):
-                                lines = selected_olt.get_pon_alarms(
+                                raw_lines = selected_olt.get_pon_alarms(
                                     slot=slot_label, pon=pon_label
                                 )
+                                lines = build_fiberhome_pon_alarms(raw_lines=raw_lines)
                             else:
                                 raw_lines = selected_olt.get_alarms(pon=pon_label)
                                 lines = build_datacom_alarms(raw_lines=raw_lines)
@@ -357,8 +362,11 @@ def main(stdscr: curses.window) -> None:
 
                         elif isinstance(selected_olt, FiberhomeOLT):
                             while True:
-                                pon_alarms = selected_olt.get_pon_alarms(
+                                raw_lines = selected_olt.get_pon_alarms(
                                     pon=pon_label, slot=slot_label
+                                )
+                                pon_alarms = build_fiberhome_pon_alarms(
+                                    raw_lines=raw_lines
                                 )
                                 filter_labels = build_filter_labels(
                                     filters=FIBERHOME_ALARM_FILTERS,

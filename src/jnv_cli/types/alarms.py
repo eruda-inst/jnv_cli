@@ -12,6 +12,14 @@ class FiberhomeONUAlarm:
 
 
 @dataclass
+class FiberhomePONAlarm:
+    slot: str
+    pon: str
+    onu: str
+    status: str
+
+
+@dataclass
 class DatacomAlarm:
     type: str
     source_value: str
