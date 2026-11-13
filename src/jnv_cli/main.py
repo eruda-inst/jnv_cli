@@ -195,7 +195,7 @@ def main(stdscr: curses.window) -> None:
                                     slot=slot_label, pon=pon_label
                                 )
                             else:
-                                raw_lines = selected_olt.get_pon_alarms(pon=pon_label)
+                                raw_lines = selected_olt.get_alarms(pon=pon_label)
                                 lines = build_datacom_alarms(raw_lines=raw_lines)
                             tui.show_result(
                                 title=(
@@ -231,7 +231,7 @@ def main(stdscr: curses.window) -> None:
                             pon_alarms_cache: list[str] | None = None
 
                             while True:
-                                raw_lines = selected_olt.get_pon_alarms(pon=pon_label)
+                                raw_lines = selected_olt.get_alarms(pon=pon_label)
                                 pon_alarms = build_datacom_alarms(raw_lines)
                                 filter_labels = build_filter_labels(
                                     filters=DATACOM_ALARM_FILTERS,
@@ -288,7 +288,7 @@ def main(stdscr: curses.window) -> None:
                                             context=ctx_base
                                             + [f"Filtro: {filter_label}"]
                                         )
-                                        raw_lines = selected_olt.get_pon_alarms(
+                                        raw_lines = selected_olt.get_alarms(
                                             pon=pon_label
                                         )
                                         pon_alarms_cache = build_datacom_alarms(
@@ -341,7 +341,7 @@ def main(stdscr: curses.window) -> None:
                                     tui.show_loading(
                                         context=filter_ctx + [f"ONU: {onu.label}"]
                                     )
-                                    raw_lines = selected_olt.get_onu_alarms(
+                                    raw_lines = selected_olt.get_alarms(
                                         pon=pon_label,
                                         onu=str(onu.id),
                                     )

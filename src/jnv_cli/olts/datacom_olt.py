@@ -145,15 +145,10 @@ class DatacomOLT:
 
         return frozenset(onu_ids)
 
-    def get_onu_alarms(self, pon: str = "PON 001", onu: str = "ONU 000") -> list[str]:
-        pon_number = numberfy(value=pon)
-        onu_number = numberfy(value=onu)
-        command = (
-            f'show alarm | include "gpon-1/1/{pon_number}/{onu_number} " | nomore | tab'
-        )
-        return self._run_command(command=command)
-
-    def get_pon_alarms(self, pon: str = "PON 001") -> list[str]:
+    def get_alarms(self, pon: str = "PON 001", onu: str | None = None) -> list[str]:
         pon_number = numberfy(value=pon)
         command = f"show alarm | include 1/1/{pon_number}/ | nomore | tab"
+        if onu is not None:
+            onu_number = numberfy(value=onu)
+            command = f'show alarm | include "gpon-1/1/{pon_number}/{onu_number} " | nomore | tab'
         return self._run_command(command=command)
