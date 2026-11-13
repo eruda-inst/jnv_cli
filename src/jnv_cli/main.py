@@ -7,6 +7,7 @@ from jnv_cli.olts.fiberhome_olt import FIBERHOME_ALARM_FILTERS, FiberhomeOLT
 from jnv_cli.tui import TUI
 from jnv_cli.types.olt_names import OLTNames
 from jnv_cli.utils import NO_ALARM_LABEL, SERIAL_FILTER_SENTINEL, count_alarms_by_filter
+from jnv_cli.view.alarms import build_datacom_pon_alarms
 from jnv_cli.view.menus import build_filter_labels, build_onu_labels
 
 COMMANDS = ("Consultar alarmes das ONUs", "Consultar alarmes da PON")
@@ -194,7 +195,8 @@ def main(stdscr: curses.window) -> None:
                                     slot=slot_label, pon=pon_label
                                 )
                             else:
-                                lines = selected_olt.get_pon_alarms(pon=pon_label)
+                                raw_lines = selected_olt.get_pon_alarms(pon=pon_label)
+                                lines = build_datacom_pon_alarms(raw_lines=raw_lines)
                             tui.show_result(
                                 title=(
                                     f"{command_label} — {olt_label} / "
@@ -229,7 +231,8 @@ def main(stdscr: curses.window) -> None:
                             pon_alarms_cache: list[str] | None = None
 
                             while True:
-                                pon_alarms = selected_olt.get_pon_alarms(pon=pon_label)
+                                raw_lines = selected_olt.get_pon_alarms(pon=pon_label)
+                                pon_alarms = build_datacom_pon_alarms(raw_lines)
                                 filter_labels = build_filter_labels(
                                     filters=DATACOM_ALARM_FILTERS,
                                     count_map=count_alarms_by_filter(
@@ -285,8 +288,11 @@ def main(stdscr: curses.window) -> None:
                                             context=ctx_base
                                             + [f"Filtro: {filter_label}"]
                                         )
-                                        pon_alarms_cache = selected_olt.get_pon_alarms(
+                                        raw_lines = selected_olt.get_pon_alarms(
                                             pon=pon_label
+                                        )
+                                        pon_alarms_cache = build_datacom_pon_alarms(
+                                            raw_lines=raw_lines
                                         )
                                     alarm_onu_ids = selected_olt.get_onu_ids_with_alarm(
                                         alarm_lines=pon_alarms_cache,
