@@ -168,14 +168,12 @@ class FiberhomeOLT:
         ]
 
         raw_lines = self._run_commands(commands=commands)
-        alarms = []
+        alarm_raw_lines = []
 
         for raw_line in raw_lines:
             match = self._ONU_ALARM_RE.search(string=raw_line)
 
             if match is not None:
-                raw_result = match.group()
-                result = raw_result.strip()
-                alarms.append(result)
+                alarm_raw_lines.append(raw_line)
 
-        return alarms if len(alarms) else [NO_ALARM_LABEL]
+        return alarm_raw_lines if len(alarm_raw_lines) else [NO_ALARM_LABEL]

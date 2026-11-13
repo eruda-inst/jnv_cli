@@ -1,25 +1,136 @@
 import re
-from dataclasses import dataclass, replace
+from dataclasses import replace
 
+from jnv_cli.types.alarms import DatacomAlarm, FiberhomeONUAlarm
 from jnv_cli.utils import NO_ALARM_LABEL, NONE_LABEL
 
 
-@dataclass
-class DatacomPONAlarm:
-    type: str
-    source_value: str
-    name: str
-    info: str
-    time: str
-    unstable: str
-    severity: str
+def build_fiberhome_onu_alarms(raw_lines: list[str]) -> list[str]:
+    if raw_lines == [NO_ALARM_LABEL]:
+        return raw_lines
+
+    alarms = []
+
+    for raw_line in raw_lines:
+        line = raw_line.strip()
+        parts = line.split()
+
+        item = NONE_LABEL
+        description = NONE_LABEL
+        code = NONE_LABEL
+        object = NONE_LABEL
+        begintime = NONE_LABEL
+        endtime = NONE_LABEL
+
+        if len(parts) >= 1:
+            item = parts[0]
+
+        if len(parts) >= 2:
+            description = parts[1]
+
+        if len(parts) >= 3:
+            code = parts[2]
+
+        if len(parts) >= 4:
+            object = parts[3]
+
+        TIME_RE = re.compile(pattern=r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}")
+        time_match = TIME_RE.findall(string=line)
+        if len(time_match) >= 1:
+            begintime = time_match[0]
+        if len(time_match) >= 2:
+            endtime = time_match[1]
+
+        alarms.append(
+            FiberhomeONUAlarm(
+                item=f"{int(item):03d}",
+                description=description,
+                code=f"{int(code):03d}",
+                object=object,
+                begintime=begintime,
+                endtime=endtime,
+            )
+        )
+
+    max_item = max([len(alarm.item) for alarm in alarms], default=0)
+    max_description = max([len(alarm.description) for alarm in alarms], default=0)
+    max_code = max([len(alarm.code) for alarm in alarms], default=0)
+    max_object = max([len(alarm.object) for alarm in alarms], default=0)
+    max_begintime = max([len(alarm.begintime) for alarm in alarms], default=0)
+    max_endtime = max([len(alarm.endtime) for alarm in alarms], default=0)
+
+    h1 = "ITEM"
+    h2 = "DESCRIPTION"
+    h3 = "CODE"
+    h4 = "OBJECT"
+    h5 = "BEGIN TIME"
+    h6 = "END TIME"
+
+    if max_item > len(h1):
+        h1 = h1.ljust(max_item)
+    else:
+        max_item = len(h1)
+
+    if max_description > len(h2):
+        h2 = h2.ljust(max_description)
+    else:
+        max_description = len(h2)
+
+    if max_code > len(h3):
+        h3 = h3.ljust(max_code)
+    else:
+        max_code = len(h3)
+
+    if max_object > len(h4):
+        h4 = h4.ljust(max_object)
+    else:
+        max_object = len(h4)
+
+    if max_begintime > len(h5):
+        h5 = h5.ljust(max_begintime)
+    else:
+        max_begintime = len(h5)
+
+    if max_endtime > len(h6):
+        h6 = h6.ljust(max_endtime)
+    else:
+        max_endtime = len(h6)
+
+    alarms = [replace(alarm, item=alarm.item.ljust(max_item)) for alarm in alarms]
+    alarms = [
+        replace(alarm, description=alarm.description.ljust(max_description))
+        for alarm in alarms
+    ]
+    alarms = [replace(alarm, code=alarm.code.ljust(max_code)) for alarm in alarms]
+    alarms = [replace(alarm, object=alarm.object.ljust(max_object)) for alarm in alarms]
+    alarms = [
+        replace(alarm, begintime=alarm.begintime.ljust(max_begintime))
+        for alarm in alarms
+    ]
+    alarms = [
+        replace(alarm, endtime=alarm.endtime.ljust(max_endtime)) for alarm in alarms
+    ]
+
+    hs = f"{h1}   {h2}   {h3}   {h4}   {h5}   {h6}"
+    dashes = "-" * len(hs)
+
+    output = []
+    output.append(hs)
+    output.append(dashes)
+
+    for alarm in alarms:
+        output.append(
+            f"{alarm.item}   {alarm.description}   {alarm.code}   {alarm.object}   {alarm.begintime}   {alarm.endtime}"
+        )
+
+    return output
 
 
 def build_datacom_alarms(raw_lines: list[str]) -> list[str]:
-    alarms = []
-
     if raw_lines == [NO_ALARM_LABEL]:
         return raw_lines
+
+    alarms = []
 
     for raw_line in raw_lines:
         alarm = raw_line.strip()
@@ -57,7 +168,7 @@ def build_datacom_alarms(raw_lines: list[str]) -> list[str]:
             time = match_time.group()
 
         alarms.append(
-            DatacomPONAlarm(
+            DatacomAlarm(
                 type=type,
                 source_value=source_value,
                 name=name,

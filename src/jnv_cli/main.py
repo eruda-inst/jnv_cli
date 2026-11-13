@@ -7,7 +7,7 @@ from jnv_cli.olts.fiberhome_olt import FIBERHOME_ALARM_FILTERS, FiberhomeOLT
 from jnv_cli.tui import TUI
 from jnv_cli.types.olt_names import OLTNames
 from jnv_cli.utils import NO_ALARM_LABEL, SERIAL_FILTER_SENTINEL, count_alarms_by_filter
-from jnv_cli.view.alarms import build_datacom_alarms
+from jnv_cli.view.alarms import build_datacom_alarms, build_fiberhome_onu_alarms
 from jnv_cli.view.menus import build_filter_labels, build_onu_labels
 
 COMMANDS = ("Consultar alarmes das ONUs", "Consultar alarmes da PON")
@@ -463,12 +463,14 @@ def main(stdscr: curses.window) -> None:
                                     tui.show_loading(
                                         context=filter_ctx + [f"ONU: {onu.label}"]
                                     )
-                                    lines = selected_olt.get_onu_alarms(
+                                    raw_lines = selected_olt.get_onu_alarms(
                                         slot=slot_label,
                                         pon=pon_label,
                                         onu=onu.id,
                                     )
-
+                                    lines = build_fiberhome_onu_alarms(
+                                        raw_lines=raw_lines
+                                    )
                                     tui.show_result(
                                         title=(
                                             f"{command_label} — {olt_label} / "
