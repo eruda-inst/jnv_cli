@@ -1,19 +1,46 @@
 import re
-from dataclasses import replace
+from collections.abc import Sequence
+from dataclasses import asdict, replace
 
-from jnv_cli.types.alarms import DatacomAlarm, FiberhomeONUAlarm, FiberhomePONAlarm
+from jnv_cli.types.alarms import (
+    Alarms,
+    DatacomAlarm,
+    FiberhomeONUAlarm,
+    FiberhomePONAlarm,
+)
 from jnv_cli.utils import NO_ALARM_LABEL, NONE_LABEL
 
+COLUMN_SEPARATOR = " " * 3
+HORIZONTAL_LINE_CHARACTER = "-"
 
-def build_fiberhome_pon_alarms(raw_lines: list[str]) -> list[str]:
-    if not raw_lines:
+
+def build_alarm_table_header_lines(cols: Sequence[str]) -> list[str]:
+    cols = COLUMN_SEPARATOR.join(cols)
+    horizontal_line = HORIZONTAL_LINE_CHARACTER * len(cols)
+
+    return [cols, horizontal_line]
+
+
+def build_alarm_table_rows(alarms: Alarms) -> list[str]:
+    rows = []
+
+    for alarm in alarms:
+        alarm_dict = asdict(alarm)
+        values = alarm_dict.values()
+        rows.append(COLUMN_SEPARATOR.join(values))
+
+    return rows
+
+
+def build_fiberhome_pon_alarm_table(raw_alarms: list[str]) -> list[str]:
+    if not raw_alarms:
         return [NO_ALARM_LABEL]
 
-    alarms = []
+    alarms: list[FiberhomePONAlarm] = []
 
-    for raw_line in raw_lines:
-        line = raw_line.strip().removesuffix(".")
-        parts = line.split()
+    for raw_alarm in raw_alarms:
+        alarm = raw_alarm.strip().removesuffix(".")
+        parts = alarm.split()
 
         slot = NONE_LABEL
         pon = NONE_LABEL
@@ -30,7 +57,7 @@ def build_fiberhome_pon_alarms(raw_lines: list[str]) -> list[str]:
             onu = parts[5]
 
         STATUS_RE = re.compile(pattern=r"active|inactive|power down|link loss")
-        status_match = STATUS_RE.search(string=line)
+        status_match = STATUS_RE.search(string=alarm)
         if status_match is not None:
             status = status_match.group()
 
@@ -43,63 +70,45 @@ def build_fiberhome_pon_alarms(raw_lines: list[str]) -> list[str]:
             )
         )
 
-    max_slot = max([len(alarm.slot) for alarm in alarms], default=0)
-    max_pon = max([len(alarm.pon) for alarm in alarms], default=0)
-    max_onu = max([len(alarm.onu) for alarm in alarms], default=0)
-    max_status = max([len(alarm.status) for alarm in alarms], default=0)
+    cols = ["SLOT", "PON", "ONU", "STATUS"]
+    sizes = [
+        max([len(alarm.slot) for alarm in alarms], default=0),
+        max([len(alarm.pon) for alarm in alarms], default=0),
+        max([len(alarm.onu) for alarm in alarms], default=0),
+        max([len(alarm.status) for alarm in alarms], default=0),
+    ]
 
-    h1 = "SLOT"
-    h2 = "PON"
-    h3 = "ONU"
-    h4 = "STATUS"
-
-    if max_slot > len(h1):
-        h1 = h1.ljust(max_slot)
-    else:
-        max_slot = len(h1)
-
-    if max_pon > len(h2):
-        h2 = h2.ljust(max_pon)
-    else:
-        max_pon = len(h2)
-
-    if max_onu > len(h3):
-        h3 = h3.ljust(max_onu)
-    else:
-        max_onu = len(h3)
-
-    if max_status > len(h4):
-        h4 = h4.ljust(max_status)
-    else:
-        max_status = len(h4)
-
-    alarms = [replace(alarm, slot=alarm.slot.ljust(max_slot)) for alarm in alarms]
-    alarms = [replace(alarm, pon=alarm.pon.ljust(max_pon)) for alarm in alarms]
-    alarms = [replace(alarm, onu=alarm.onu.ljust(max_onu)) for alarm in alarms]
-    alarms = [replace(alarm, status=alarm.status.ljust(max_status)) for alarm in alarms]
-
-    hs = f"{h1}   {h2}   {h3}   {h4}"
-    dashes = "-" * len(hs)
-
-    output = []
-    output.append(hs)
-    output.append(dashes)
+    for i in range(len(cols)):
+        max_size = max(len(cols[i]), sizes[i])
+        cols[i] = cols[i].ljust(max_size)
+        sizes[i] = max_size
 
     for alarm in alarms:
-        output.append(f"{alarm.slot}   {alarm.pon}   {alarm.onu}   {alarm.status}")
+        alarm = replace(alarm, slot=alarm.slot.ljust(sizes[0]))
+        alarm = replace(alarm, pon=alarm.pon.ljust(sizes[1]))
+        alarm = replace(alarm, onu=alarm.onu.ljust(sizes[2]))
+        alarm = replace(alarm, status=alarm.status.ljust(sizes[3]))
 
-    return output
+    table = []
+
+    columns = build_alarm_table_header_lines(cols=cols)
+    rows = build_alarm_table_rows(alarms=alarms)
+
+    table.extend(columns)
+    table.extend(rows)
+
+    return table
 
 
-def build_fiberhome_onu_alarms(raw_lines: list[str]) -> list[str]:
-    if not raw_lines:
+def build_fiberhome_onu_alarm_table(raw_alarms: list[str]) -> list[str]:
+    if not raw_alarms:
         return [NO_ALARM_LABEL]
 
-    alarms = []
+    alarms: list[FiberhomeONUAlarm] = []
 
-    for raw_line in raw_lines:
-        line = raw_line.strip()
-        parts = line.split()
+    for raw_alarm in raw_alarms:
+        alarm = raw_alarm.strip()
+        parts = alarm.split()
 
         item = NONE_LABEL
         description = NONE_LABEL
@@ -121,7 +130,7 @@ def build_fiberhome_onu_alarms(raw_lines: list[str]) -> list[str]:
             object = parts[3]
 
         TIME_RE = re.compile(pattern=r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}")
-        time_match = TIME_RE.findall(string=line)
+        time_match = TIME_RE.findall(string=alarm)
         if len(time_match) >= 1:
             begintime = time_match[0]
         if len(time_match) >= 2:
@@ -138,88 +147,48 @@ def build_fiberhome_onu_alarms(raw_lines: list[str]) -> list[str]:
             )
         )
 
-    max_item = max([len(alarm.item) for alarm in alarms], default=0)
-    max_description = max([len(alarm.description) for alarm in alarms], default=0)
-    max_code = max([len(alarm.code) for alarm in alarms], default=0)
-    max_object = max([len(alarm.object) for alarm in alarms], default=0)
-    max_begintime = max([len(alarm.begintime) for alarm in alarms], default=0)
-    max_endtime = max([len(alarm.endtime) for alarm in alarms], default=0)
-
-    h1 = "ITEM"
-    h2 = "DESCRIPTION"
-    h3 = "CODE"
-    h4 = "OBJECT"
-    h5 = "BEGIN TIME"
-    h6 = "END TIME"
-
-    if max_item > len(h1):
-        h1 = h1.ljust(max_item)
-    else:
-        max_item = len(h1)
-
-    if max_description > len(h2):
-        h2 = h2.ljust(max_description)
-    else:
-        max_description = len(h2)
-
-    if max_code > len(h3):
-        h3 = h3.ljust(max_code)
-    else:
-        max_code = len(h3)
-
-    if max_object > len(h4):
-        h4 = h4.ljust(max_object)
-    else:
-        max_object = len(h4)
-
-    if max_begintime > len(h5):
-        h5 = h5.ljust(max_begintime)
-    else:
-        max_begintime = len(h5)
-
-    if max_endtime > len(h6):
-        h6 = h6.ljust(max_endtime)
-    else:
-        max_endtime = len(h6)
-
-    alarms = [replace(alarm, item=alarm.item.ljust(max_item)) for alarm in alarms]
-    alarms = [
-        replace(alarm, description=alarm.description.ljust(max_description))
-        for alarm in alarms
-    ]
-    alarms = [replace(alarm, code=alarm.code.ljust(max_code)) for alarm in alarms]
-    alarms = [replace(alarm, object=alarm.object.ljust(max_object)) for alarm in alarms]
-    alarms = [
-        replace(alarm, begintime=alarm.begintime.ljust(max_begintime))
-        for alarm in alarms
-    ]
-    alarms = [
-        replace(alarm, endtime=alarm.endtime.ljust(max_endtime)) for alarm in alarms
+    cols = ["ITEM", "DESCRIPTION", "CODE", "OBJECT", "BEGIN TIME", "END TIME"]
+    sizes = [
+        max([len(alarm.item) for alarm in alarms], default=0),
+        max([len(alarm.description) for alarm in alarms], default=0),
+        max([len(alarm.code) for alarm in alarms], default=0),
+        max([len(alarm.object) for alarm in alarms], default=0),
+        max([len(alarm.begintime) for alarm in alarms], default=0),
+        max([len(alarm.endtime) for alarm in alarms], default=0),
     ]
 
-    hs = f"{h1}   {h2}   {h3}   {h4}   {h5}   {h6}"
-    dashes = "-" * len(hs)
-
-    output = []
-    output.append(hs)
-    output.append(dashes)
+    for i in range(len(cols)):
+        max_size = max(len(cols[i]), sizes[i])
+        cols[i] = cols[i].ljust(max_size)
+        sizes[i] = max_size
 
     for alarm in alarms:
-        output.append(
-            f"{alarm.item}   {alarm.description}   {alarm.code}   {alarm.object}   {alarm.begintime}   {alarm.endtime}"
-        )
+        alarm = replace(alarm, item=alarm.item.ljust(sizes[0]))
+        alarm = replace(alarm, description=alarm.description.ljust(sizes[1]))
+        alarm = replace(alarm, code=alarm.code.ljust(sizes[2]))
+        alarm = replace(alarm, object=alarm.object.ljust(sizes[3]))
+        alarm = replace(alarm, begintime=alarm.begintime.ljust(sizes[4]))
+        alarm = replace(alarm, endtime=alarm.endtime.ljust(sizes[5]))
 
-    return output
+    table = []
+
+    columns = build_alarm_table_header_lines(cols=cols)
+    rows = build_alarm_table_rows(alarms=alarms)
+
+    table.extend(columns)
+    table.extend(rows)
+
+    return table
 
 
-def build_datacom_alarms(raw_lines: list[str]) -> list[str]:
-    if not raw_lines:
+def build_datacom_alarm_table(raw_alarms: list[str]) -> list[str]:
+    if not raw_alarms:
         return [NO_ALARM_LABEL]
 
-    alarms = []
+    alarms: list[DatacomAlarm] = []
 
-    for raw_line in raw_lines:
-        alarm = raw_line.strip()
+    for raw_alarm in raw_alarms:
+        alarm = raw_alarm.strip()
         parts = alarm.split()
 
         type = NONE_LABEL
@@ -265,82 +234,37 @@ def build_datacom_alarms(raw_lines: list[str]) -> list[str]:
             )
         )
 
-    max_type = max([len(alarm.type) for alarm in alarms], default=0)
-    max_source_value = max([len(alarm.source_value) for alarm in alarms], default=0)
-    max_name = max([len(alarm.name) for alarm in alarms], default=0)
-    max_info = max([len(alarm.info) for alarm in alarms], default=0)
-    max_time = max([len(alarm.time) for alarm in alarms], default=0)
-    max_unstable = max([len(alarm.unstable) for alarm in alarms], default=0)
-    max_severity = max([len(alarm.severity) for alarm in alarms], default=0)
-
-    h1 = "TYPE"
-    h2 = "SOURCE VALUE"
-    h3 = "NAME"
-    h4 = "INFO"
-    h5 = "TIME"
-    h6 = "UNSTABLE"
-    h7 = "SEVERITY"
-
-    if max_type > len(h1):
-        h1 = h1.ljust(max_type)
-    else:
-        max_type = len(h1)
-
-    if max_source_value > len(h2):
-        h2 = h2.ljust(max_source_value)
-    else:
-        max_source_value = len(h2)
-
-    if max_name > len(h3):
-        h3 = h3.ljust(max_name)
-    else:
-        max_name = len(h3)
-
-    if max_info > len(h4):
-        h4 = h4.ljust(max_info)
-    else:
-        max_info = len(h4)
-
-    if max_time > len(h5):
-        h5 = h5.ljust(max_time)
-    else:
-        max_time = len(h5)
-
-    if max_unstable > len(h6):
-        h6 = h6.ljust(max_unstable)
-    else:
-        max_unstable = len(h6)
-
-    if max_severity > len(h7):
-        h7 = h7.ljust(max_severity)
-    else:
-        max_severity = len(h7)
-
-    alarms = [replace(alarm, type=alarm.type.ljust(max_type)) for alarm in alarms]
-    alarms = [
-        replace(alarm, source_value=alarm.source_value.ljust(max_source_value))
-        for alarm in alarms
-    ]
-    alarms = [replace(alarm, name=alarm.name.ljust(max_name)) for alarm in alarms]
-    alarms = [replace(alarm, info=alarm.info.ljust(max_info)) for alarm in alarms]
-    alarms = [replace(alarm, time=alarm.time.ljust(max_time)) for alarm in alarms]
-    alarms = [
-        replace(alarm, unstable=alarm.unstable.ljust(max_unstable)) for alarm in alarms
-    ]
-    alarms = [
-        replace(alarm, severity=alarm.severity.ljust(max_severity)) for alarm in alarms
+    cols = ["TYPE", "SOURCE VALUE", "NAME", "INFO", "TIME", "UNSTABLE", "SEVERITY"]
+    sizes = [
+        max([len(alarm.type) for alarm in alarms], default=0),
+        max([len(alarm.source_value) for alarm in alarms], default=0),
+        max([len(alarm.name) for alarm in alarms], default=0),
+        max([len(alarm.info) for alarm in alarms], default=0),
+        max([len(alarm.time) for alarm in alarms], default=0),
+        max([len(alarm.unstable) for alarm in alarms], default=0),
+        max([len(alarm.severity) for alarm in alarms], default=0),
     ]
 
-    hs = f"{h1}   {h2}   {h3}   {h4}   {h5}   {h6}   {h7}"
-    dashes = "-" * len(hs)
-
-    output = []
-    output.append(hs)
-    output.append(dashes)
+    for i in range(len(cols)):
+        max_size = max(len(cols[i]), sizes[i])
+        cols[i] = cols[i].ljust(max_size)
+        sizes[i] = max_size
 
     for alarm in alarms:
-        output.append(
-            f"{alarm.type}   {alarm.source_value}   {alarm.name}   {alarm.info}   {alarm.time}   {alarm.unstable}   {alarm.severity}"
-        )
+        alarm = replace(alarm, type=alarm.type.ljust(sizes[0]))
+        alarm = replace(alarm, source_value=alarm.source_value.ljust(sizes[1]))
+        alarm = replace(alarm, name=alarm.name.ljust(sizes[2]))
+        alarm = replace(alarm, info=alarm.info.ljust(sizes[3]))
+        alarm = replace(alarm, time=alarm.time.ljust(sizes[4]))
+        alarm = replace(alarm, unstable=alarm.unstable.ljust(sizes[5]))
+        alarm = replace(alarm, severity=alarm.severity.ljust(sizes[6]))
 
-    return output
+    table = []
+
+    columns = build_alarm_table_header_lines(cols=cols)
+    rows = build_alarm_table_rows(alarms=alarms)
+
+    table.extend(columns)
+    table.extend(rows)
+
+    return table

@@ -28,3 +28,6 @@ class DatacomAlarm:
     time: str
     unstable: str
     severity: str
+
+
+Alarms = list[DatacomAlarm] | list[FiberhomeONUAlarm] | list[FiberhomePONAlarm]

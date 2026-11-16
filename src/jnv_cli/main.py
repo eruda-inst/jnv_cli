@@ -8,9 +8,9 @@ from jnv_cli.tui import TUI
 from jnv_cli.types.olt_names import OLTNames
 from jnv_cli.utils import NO_ALARM_LABEL, SERIAL_FILTER_SENTINEL, count_alarms_by_filter
 from jnv_cli.view.alarms import (
-    build_datacom_alarms,
-    build_fiberhome_onu_alarms,
-    build_fiberhome_pon_alarms,
+    build_datacom_alarm_table,
+    build_fiberhome_onu_alarm_table,
+    build_fiberhome_pon_alarm_table,
 )
 from jnv_cli.view.menus import build_filter_labels, build_onu_labels
 
@@ -195,19 +195,23 @@ def main(stdscr: curses.window) -> None:
                         if command_label == "Consultar alarmes da PON":
                             tui.show_loading(context=ctx_base)
                             if isinstance(selected_olt, FiberhomeOLT):
-                                raw_lines = selected_olt.get_pon_alarms(
+                                raw_alarms = selected_olt.get_pon_alarms(
                                     slot=slot_label, pon=pon_label
                                 )
-                                lines = build_fiberhome_pon_alarms(raw_lines=raw_lines)
+                                alarms = build_fiberhome_pon_alarm_table(
+                                    raw_alarms=raw_alarms
+                                )
                             else:
-                                raw_lines = selected_olt.get_alarms(pon=pon_label)
-                                lines = build_datacom_alarms(raw_lines=raw_lines)
+                                raw_alarms = selected_olt.get_alarms(pon=pon_label)
+                                alarms = build_datacom_alarm_table(
+                                    raw_alarms=raw_alarms
+                                )
                             tui.show_result(
                                 title=(
                                     f"{command_label} — {olt_label} / "
                                     f"{slot_label} / {pon_label}"
                                 ),
-                                lines=lines,
+                                lines=alarms,
                             )
                             continue
 
@@ -237,7 +241,7 @@ def main(stdscr: curses.window) -> None:
 
                             while True:
                                 raw_lines = selected_olt.get_alarms(pon=pon_label)
-                                pon_alarms = build_datacom_alarms(raw_lines)
+                                pon_alarms = build_datacom_alarm_table(raw_lines)
                                 filter_labels = build_filter_labels(
                                     filters=DATACOM_ALARM_FILTERS,
                                     count_map=count_alarms_by_filter(
@@ -293,11 +297,11 @@ def main(stdscr: curses.window) -> None:
                                             context=ctx_base
                                             + [f"Filtro: {filter_label}"]
                                         )
-                                        raw_lines = selected_olt.get_alarms(
+                                        raw_alarms = selected_olt.get_alarms(
                                             pon=pon_label
                                         )
-                                        pon_alarms_cache = build_datacom_alarms(
-                                            raw_lines=raw_lines
+                                        pon_alarms_cache = build_datacom_alarm_table(
+                                            raw_alarms=raw_alarms
                                         )
                                     alarm_onu_ids = selected_olt.get_onu_ids_with_alarm(
                                         alarm_lines=pon_alarms_cache,
@@ -346,11 +350,13 @@ def main(stdscr: curses.window) -> None:
                                     tui.show_loading(
                                         context=filter_ctx + [f"ONU: {onu.label}"]
                                     )
-                                    raw_lines = selected_olt.get_alarms(
+                                    raw_alarms = selected_olt.get_alarms(
                                         pon=pon_label,
                                         onu=str(onu.id),
                                     )
-                                    lines = build_datacom_alarms(raw_lines=raw_lines)
+                                    lines = build_datacom_alarm_table(
+                                        raw_alarms=raw_alarms
+                                    )
                                     tui.show_result(
                                         title=(
                                             f"{command_label} — {olt_label} / "
@@ -362,11 +368,11 @@ def main(stdscr: curses.window) -> None:
 
                         elif isinstance(selected_olt, FiberhomeOLT):
                             while True:
-                                raw_lines = selected_olt.get_pon_alarms(
+                                raw_alarms = selected_olt.get_pon_alarms(
                                     pon=pon_label, slot=slot_label
                                 )
-                                pon_alarms = build_fiberhome_pon_alarms(
-                                    raw_lines=raw_lines
+                                pon_alarms = build_fiberhome_pon_alarm_table(
+                                    raw_alarms=raw_alarms
                                 )
                                 filter_labels = build_filter_labels(
                                     filters=FIBERHOME_ALARM_FILTERS,
@@ -471,13 +477,13 @@ def main(stdscr: curses.window) -> None:
                                     tui.show_loading(
                                         context=filter_ctx + [f"ONU: {onu.label}"]
                                     )
-                                    raw_lines = selected_olt.get_onu_alarms(
+                                    raw_alarms = selected_olt.get_onu_alarms(
                                         slot=slot_label,
                                         pon=pon_label,
                                         onu=onu.id,
                                     )
-                                    lines = build_fiberhome_onu_alarms(
-                                        raw_lines=raw_lines
+                                    alarms = build_fiberhome_onu_alarm_table(
+                                        raw_alarms=raw_alarms
                                     )
                                     tui.show_result(
                                         title=(
@@ -485,7 +491,7 @@ def main(stdscr: curses.window) -> None:
                                             f"{slot_label} / {pon_label} / "
                                             f"{onu.label}"
                                         ),
-                                        lines=lines,
+                                        lines=alarms,
                                     )
 
                         continue
