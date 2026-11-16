@@ -13,6 +13,12 @@ from jnv_cli.utils import NO_ALARM_LABEL, NONE_LABEL
 
 _COLUMN_SEPARATOR = " " * 3
 _HORIZONTAL_LINE_CHARACTER = "-"
+_FIBERHOME_PON_STATUS_RE = re.compile(pattern=r"active|inactive|power down|link loss")
+_FIBERHOME_ONU_TIME_RE = re.compile(pattern=r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}")
+_DATACOM_INFO_RE = re.compile(
+    pattern=r"ONU Loss of signal|Receive dying gasp of ONU|Deactivate failure of ONU|Loss of PLOAM for ONU|Drift of the window of ONU|Transmission interference warning of ONU|Loss of frame of ONU"
+)
+_DATACOM_TIME_RE = re.compile(pattern=r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC[\+-]\d")
 
 
 def _build_alarm_table_header_lines(cols: Sequence[str]) -> list[str]:
@@ -82,8 +88,7 @@ def build_fiberhome_pon_alarm_table(raw_alarms: list[str]) -> list[str]:
         if len(parts) >= 6:
             onu = parts[5]
 
-        STATUS_RE = re.compile(pattern=r"active|inactive|power down|link loss")
-        status_match = STATUS_RE.search(string=alarm)
+        status_match = _FIBERHOME_PON_STATUS_RE.search(string=alarm)
         if status_match is not None:
             status = status_match.group()
 
@@ -130,8 +135,7 @@ def build_fiberhome_onu_alarm_table(raw_alarms: list[str]) -> list[str]:
         if len(parts) >= 4:
             object = parts[3]
 
-        TIME_RE = re.compile(pattern=r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}")
-        time_match = TIME_RE.findall(string=alarm)
+        time_match = _FIBERHOME_ONU_TIME_RE.findall(string=alarm)
         if len(time_match) >= 1:
             begintime = time_match[0]
         if len(time_match) >= 2:
@@ -182,15 +186,11 @@ def build_datacom_alarm_table(raw_alarms: list[str]) -> list[str]:
             name = parts[2]
             unstable = parts[-2]
 
-        INFO_RE = re.compile(
-            pattern=r"ONU Loss of signal|Receive dying gasp of ONU|Deactivate failure of ONU|Loss of PLOAM for ONU|Drift of the window of ONU|Transmission interference warning of ONU|Loss of frame of ONU"
-        )
-        match_info = INFO_RE.search(string=alarm)
+        match_info = _DATACOM_INFO_RE.search(string=alarm)
         if match_info is not None:
             info = match_info.group()
 
-        TIME_RE = re.compile(pattern=r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC[\+-]\d")
-        match_time = TIME_RE.search(string=alarm)
+        match_time = _DATACOM_TIME_RE.search(string=alarm)
         if match_time is not None:
             time = match_time.group()
 
