@@ -304,11 +304,11 @@ def main(stdscr: curses.window) -> None:
                                             raw_alarms=raw_alarms
                                         )
                                     alarm_onu_ids = selected_olt.get_onu_ids_with_alarm(
-                                        alarm_lines=pon_alarms_cache,
-                                        alarm_code=filter_code,
+                                        alarms=pon_alarms_cache,
+                                        code=filter_code,
                                     )
                                     filtered_onus = [
-                                        o for o in onus if (o.id - 1) in alarm_onu_ids
+                                        o for o in onus if o.id in alarm_onu_ids
                                     ]
                                     title_filter = filter_code
                                     filter_ctx_line = f"Filtro: {filter_label}"

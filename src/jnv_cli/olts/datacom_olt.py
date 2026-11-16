@@ -125,18 +125,17 @@ class DatacomOLT:
         return onus
 
     @classmethod
-    def get_onu_ids_with_alarm(
-        cls, alarm_lines: list[str], alarm_code: str
-    ) -> frozenset[int]:
+    def get_onu_ids_with_alarm(cls, alarms: list[str], code: str) -> frozenset[int]:
         onu_ids = set()
-        code_re = re.compile(rf"\b{re.escape(alarm_code)}\b")
 
-        for line in alarm_lines:
-            if not code_re.search(string=line):
-                continue
-            match = cls._GPON_RE.search(string=line)
-            if match:
-                onu_ids.add(int(match.group(1)))
+        for alarm in alarms:
+            if code in alarm:
+                alarm_parts = alarm.split()
+                gpon = alarm_parts[1]
+                gpon_parts = gpon.split("/")
+                id_raw = gpon_parts[-1]
+                id = int(id_raw)
+                onu_ids.add(id)
 
         return frozenset(onu_ids)
 
