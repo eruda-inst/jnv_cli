@@ -73,8 +73,8 @@ class DatacomOLT:
     _GPON_RE: ClassVar[re.Pattern[str]] = re.compile(pattern=r"gpon-\d+/\d+/\d+/(\d+)")
     DATACOM_HOSTNAMES: ClassVar[dict[OLTNames, str]] = {
         OLTNames.ITAITU: settings.olt_itaitu_hostname,
-        OLTNames.JACOBINA_III: settings.olt_jac_3_hostname,
-        OLTNames.LAGES_DO_BATATA: settings.olt_lajes_hostname,
+        OLTNames.JACOBINA_III: settings.olt_jacobina_iii_hostname,
+        OLTNames.LAGES_DO_BATATA: settings.olt_lages_do_batata_hostname,
         OLTNames.PALMEIRINHA: settings.olt_palmeirinha_hostname,
         OLTNames.PARAISO: settings.olt_paraiso_hostname,
     }

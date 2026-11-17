@@ -7,8 +7,8 @@ class SSHClient:
     def __init__(
         self,
         hostname: str,
-        username: str = settings.olt_default_username,
-        password: str = settings.olt_default_password.get_secret_value(),
+        username: str = settings.olt_datacom_username,
+        password: str = settings.olt_datacom_password.get_secret_value(),
     ) -> None:
         self.hostname = hostname
         self.username = username
