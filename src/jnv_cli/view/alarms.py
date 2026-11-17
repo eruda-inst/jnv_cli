@@ -16,7 +16,9 @@ _HORIZONTAL_LINE_CHARACTER = "-"
 _FIBERHOME_PON_STATUS_RE = re.compile(pattern=r"active|inactive|power down|link loss")
 _FIBERHOME_ONU_TIME_RE = re.compile(pattern=r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}")
 _DATACOM_INFO_RE = re.compile(
-    pattern=r"ONU Loss of signal|Receive dying gasp of ONU|Deactivate failure of ONU|Loss of PLOAM for ONU|Drift of the window of ONU|Transmission interference warning of ONU|Loss of frame of ONU"
+    pattern=(
+        r"ONU Loss of signal|Signal loss of ONU|Receive dying gasp of ONU|Deactivate failure of ONU|Drift of (?:the )?window of ONU|Loss of GEM channel delineation|Loss of acknowledge with ONU|Loss of PLOAM for ONU|Loss of burst of ONU|Loss of frame of ONU|Loss of OMCC channel|Loss of PLOAM channel|Link mismatch of ONU|Auto provisioning fail|ONU auto provisioning fail|ONU down|The ONU has an internal problem/defect or ONU was disconnected from the PON link|ONU equipment failure|ONU password mismatch|ONU self-test failure|Physical equipment error of ONU|Remote defect indication of ONU|Signal degraded of ONU|Signal fail of ONU|Start-up failure of ONU|Transmission interference warning of ONU"
+    )
 )
 _DATACOM_TIME_RE = re.compile(pattern=r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC[\+-]\d")
 
