@@ -2,16 +2,22 @@
 
 Curses-based terminal UI for browsing OLT slots and PONs and inspecting ONU/PON alarms on Datacom (SSH) and Fiberhome (Telnet) OLTs.
 
+## Table of Contents
+
+- [How to run](#how-to-run)
+
 ## How to run
 
-1. **Install `uv` (package and project manger for Python)**
+1. **Install `uv` (package and project manager for Python)**
 
 - On MacOS/Linux
 
 ```sh
 # With wget
 wget -qO- https://astral.sh/uv/install.sh | sh
+```
 
+```sh
 # With curl
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
