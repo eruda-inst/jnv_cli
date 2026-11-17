@@ -26,8 +26,8 @@ class TelnetClient:
         self,
         hostname: str,
         port: int = 23,
-        username: str = settings.olt_fiberhome_default_username,
-        password: str = settings.olt_fiberhome_default_password.get_secret_value(),
+        username: str = settings.olt_fiberhome_username,
+        password: str = settings.olt_fiberhome_password.get_secret_value(),
         timeout: float = 30,
     ) -> None:
         self.hostname = hostname
