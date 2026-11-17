@@ -101,6 +101,8 @@ def build_fiberhome_pon_alarm_table(raw_alarms: list[str]) -> list[str]:
             )
         )
 
+    alarms = sorted(alarms, key=lambda alarm: alarm.status, reverse=True)
+
     cols = ["SLOT", "PON", "ONU", "STATUS"]
 
     return _build_alarm_table(alarms=alarms, cols=cols)
@@ -151,6 +153,8 @@ def build_fiberhome_onu_alarm_table(raw_alarms: list[str]) -> list[str]:
                 endtime=endtime,
             )
         )
+
+    alarms = sorted(alarms, key=lambda alarm: alarm.begintime, reverse=True)
 
     cols = ["ITEM", "DESCRIPTION", "CODE", "OBJECT", "BEGIN TIME", "END TIME"]
 
@@ -205,6 +209,8 @@ def build_datacom_alarm_table(raw_alarms: list[str]) -> list[str]:
                 severity=severity,
             )
         )
+
+    alarms = sorted(alarms, key=lambda alarm: alarm.time, reverse=True)
 
     cols = ["TYPE", "SOURCE VALUE", "NAME", "INFO", "TIME", "UNSTABLE", "SEVERITY"]
 
