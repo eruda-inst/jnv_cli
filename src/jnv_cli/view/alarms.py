@@ -1,6 +1,7 @@
 import re
 from collections.abc import Sequence
-from dataclasses import asdict, replace
+from dataclasses import asdict
+from typing import Any
 
 from jnv_cli.types.alarms import (
     Alarms,
@@ -10,26 +11,57 @@ from jnv_cli.types.alarms import (
 )
 from jnv_cli.utils import NO_ALARM_LABEL, NONE_LABEL
 
-COLUMN_SEPARATOR = " " * 3
-HORIZONTAL_LINE_CHARACTER = "-"
+_COLUMN_SEPARATOR = " " * 3
+_HORIZONTAL_LINE_CHARACTER = "-"
+_FIBERHOME_PON_STATUS_RE = re.compile(pattern=r"active|inactive|power down|link loss")
+_FIBERHOME_ONU_TIME_RE = re.compile(pattern=r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}")
+_DATACOM_INFO_RE = re.compile(
+    pattern=r"ONU Loss of signal|Receive dying gasp of ONU|Deactivate failure of ONU|Loss of PLOAM for ONU|Drift of the window of ONU|Transmission interference warning of ONU|Loss of frame of ONU"
+)
+_DATACOM_TIME_RE = re.compile(pattern=r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC[\+-]\d")
 
 
-def build_alarm_table_header_lines(cols: Sequence[str]) -> list[str]:
-    cols = COLUMN_SEPARATOR.join(cols)
-    horizontal_line = HORIZONTAL_LINE_CHARACTER * len(cols)
-
-    return [cols, horizontal_line]
+def _build_alarm_table_header_lines(cols: Sequence[str]) -> list[str]:
+    header = _COLUMN_SEPARATOR.join(cols)
+    return [header, _HORIZONTAL_LINE_CHARACTER * len(header)]
 
 
-def build_alarm_table_rows(alarms: Alarms) -> list[str]:
-    rows = []
+def _build_alarm_table_rows(alarms: list[dict[str, Any]]) -> list[str]:
+    return [_COLUMN_SEPARATOR.join(alarm.values()) for alarm in alarms]
 
-    for alarm in alarms:
-        alarm_dict = asdict(alarm)
-        values = alarm_dict.values()
-        rows.append(COLUMN_SEPARATOR.join(values))
 
-    return rows
+def _build_alarm_table(alarms: Alarms, cols: list[str]) -> list[str]:
+    alarms_dict = [asdict(alarm) for alarm in alarms]
+    sizes = []
+    map = {}
+
+    for alarm in alarms_dict:
+        for key, value in alarm.items():
+            if map.get(key) is None:
+                map[key] = []
+            map[key].append(value)
+
+    for key, values in map.items():
+        sizes.append(max([len(str(value)) for value in values], default=0))
+
+    for i in range(len(cols)):
+        max_size = max(len(cols[i]), sizes[i])
+        cols[i] = cols[i].ljust(max_size)
+        sizes[i] = max_size
+
+    for alarm in alarms_dict:
+        for i, key in enumerate(alarm):
+            alarm[key] = alarm[key].ljust(sizes[i])
+
+    table = []
+
+    columns = _build_alarm_table_header_lines(cols=cols)
+    rows = _build_alarm_table_rows(alarms=alarms_dict)
+
+    table.extend(columns)
+    table.extend(rows)
+
+    return table
 
 
 def build_fiberhome_pon_alarm_table(raw_alarms: list[str]) -> list[str]:
@@ -56,8 +88,7 @@ def build_fiberhome_pon_alarm_table(raw_alarms: list[str]) -> list[str]:
         if len(parts) >= 6:
             onu = parts[5]
 
-        STATUS_RE = re.compile(pattern=r"active|inactive|power down|link loss")
-        status_match = STATUS_RE.search(string=alarm)
+        status_match = _FIBERHOME_PON_STATUS_RE.search(string=alarm)
         if status_match is not None:
             status = status_match.group()
 
@@ -71,33 +102,8 @@ def build_fiberhome_pon_alarm_table(raw_alarms: list[str]) -> list[str]:
         )
 
     cols = ["SLOT", "PON", "ONU", "STATUS"]
-    sizes = [
-        max([len(alarm.slot) for alarm in alarms], default=0),
-        max([len(alarm.pon) for alarm in alarms], default=0),
-        max([len(alarm.onu) for alarm in alarms], default=0),
-        max([len(alarm.status) for alarm in alarms], default=0),
-    ]
 
-    for i in range(len(cols)):
-        max_size = max(len(cols[i]), sizes[i])
-        cols[i] = cols[i].ljust(max_size)
-        sizes[i] = max_size
-
-    for alarm in alarms:
-        alarm = replace(alarm, slot=alarm.slot.ljust(sizes[0]))
-        alarm = replace(alarm, pon=alarm.pon.ljust(sizes[1]))
-        alarm = replace(alarm, onu=alarm.onu.ljust(sizes[2]))
-        alarm = replace(alarm, status=alarm.status.ljust(sizes[3]))
-
-    table = []
-
-    columns = build_alarm_table_header_lines(cols=cols)
-    rows = build_alarm_table_rows(alarms=alarms)
-
-    table.extend(columns)
-    table.extend(rows)
-
-    return table
+    return _build_alarm_table(alarms=alarms, cols=cols)
 
 
 def build_fiberhome_onu_alarm_table(raw_alarms: list[str]) -> list[str]:
@@ -129,8 +135,7 @@ def build_fiberhome_onu_alarm_table(raw_alarms: list[str]) -> list[str]:
         if len(parts) >= 4:
             object = parts[3]
 
-        TIME_RE = re.compile(pattern=r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}")
-        time_match = TIME_RE.findall(string=alarm)
+        time_match = _FIBERHOME_ONU_TIME_RE.findall(string=alarm)
         if len(time_match) >= 1:
             begintime = time_match[0]
         if len(time_match) >= 2:
@@ -148,37 +153,8 @@ def build_fiberhome_onu_alarm_table(raw_alarms: list[str]) -> list[str]:
         )
 
     cols = ["ITEM", "DESCRIPTION", "CODE", "OBJECT", "BEGIN TIME", "END TIME"]
-    sizes = [
-        max([len(alarm.item) for alarm in alarms], default=0),
-        max([len(alarm.description) for alarm in alarms], default=0),
-        max([len(alarm.code) for alarm in alarms], default=0),
-        max([len(alarm.object) for alarm in alarms], default=0),
-        max([len(alarm.begintime) for alarm in alarms], default=0),
-        max([len(alarm.endtime) for alarm in alarms], default=0),
-    ]
 
-    for i in range(len(cols)):
-        max_size = max(len(cols[i]), sizes[i])
-        cols[i] = cols[i].ljust(max_size)
-        sizes[i] = max_size
-
-    for alarm in alarms:
-        alarm = replace(alarm, item=alarm.item.ljust(sizes[0]))
-        alarm = replace(alarm, description=alarm.description.ljust(sizes[1]))
-        alarm = replace(alarm, code=alarm.code.ljust(sizes[2]))
-        alarm = replace(alarm, object=alarm.object.ljust(sizes[3]))
-        alarm = replace(alarm, begintime=alarm.begintime.ljust(sizes[4]))
-        alarm = replace(alarm, endtime=alarm.endtime.ljust(sizes[5]))
-
-    table = []
-
-    columns = build_alarm_table_header_lines(cols=cols)
-    rows = build_alarm_table_rows(alarms=alarms)
-
-    table.extend(columns)
-    table.extend(rows)
-
-    return table
+    return _build_alarm_table(alarms=alarms, cols=cols)
 
 
 def build_datacom_alarm_table(raw_alarms: list[str]) -> list[str]:
@@ -191,7 +167,7 @@ def build_datacom_alarm_table(raw_alarms: list[str]) -> list[str]:
         alarm = raw_alarm.strip()
         parts = alarm.split()
 
-        type = NONE_LABEL
+        type_ = NONE_LABEL
         source_value = NONE_LABEL
         name = NONE_LABEL
         info = NONE_LABEL
@@ -200,7 +176,7 @@ def build_datacom_alarm_table(raw_alarms: list[str]) -> list[str]:
         severity = NONE_LABEL
 
         if len(parts) >= 1:
-            type = parts[0]
+            type_ = parts[0]
 
         if len(parts) >= 2:
             source_value = parts[1]
@@ -210,21 +186,17 @@ def build_datacom_alarm_table(raw_alarms: list[str]) -> list[str]:
             name = parts[2]
             unstable = parts[-2]
 
-        INFO_RE = re.compile(
-            pattern=r"ONU Loss of signal|Receive dying gasp of ONU|Deactivate failure of ONU|Loss of PLOAM for ONU|Drift of the window of ONU|Transmission interference warning of ONU|Loss of frame of ONU"
-        )
-        match_info = INFO_RE.search(string=alarm)
+        match_info = _DATACOM_INFO_RE.search(string=alarm)
         if match_info is not None:
             info = match_info.group()
 
-        TIME_RE = re.compile(pattern=r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC[\+-]\d")
-        match_time = TIME_RE.search(string=alarm)
+        match_time = _DATACOM_TIME_RE.search(string=alarm)
         if match_time is not None:
             time = match_time.group()
 
         alarms.append(
             DatacomAlarm(
-                type=type,
+                type=type_,
                 source_value=source_value,
                 name=name,
                 info=info,
@@ -235,36 +207,5 @@ def build_datacom_alarm_table(raw_alarms: list[str]) -> list[str]:
         )
 
     cols = ["TYPE", "SOURCE VALUE", "NAME", "INFO", "TIME", "UNSTABLE", "SEVERITY"]
-    sizes = [
-        max([len(alarm.type) for alarm in alarms], default=0),
-        max([len(alarm.source_value) for alarm in alarms], default=0),
-        max([len(alarm.name) for alarm in alarms], default=0),
-        max([len(alarm.info) for alarm in alarms], default=0),
-        max([len(alarm.time) for alarm in alarms], default=0),
-        max([len(alarm.unstable) for alarm in alarms], default=0),
-        max([len(alarm.severity) for alarm in alarms], default=0),
-    ]
 
-    for i in range(len(cols)):
-        max_size = max(len(cols[i]), sizes[i])
-        cols[i] = cols[i].ljust(max_size)
-        sizes[i] = max_size
-
-    for alarm in alarms:
-        alarm = replace(alarm, type=alarm.type.ljust(sizes[0]))
-        alarm = replace(alarm, source_value=alarm.source_value.ljust(sizes[1]))
-        alarm = replace(alarm, name=alarm.name.ljust(sizes[2]))
-        alarm = replace(alarm, info=alarm.info.ljust(sizes[3]))
-        alarm = replace(alarm, time=alarm.time.ljust(sizes[4]))
-        alarm = replace(alarm, unstable=alarm.unstable.ljust(sizes[5]))
-        alarm = replace(alarm, severity=alarm.severity.ljust(sizes[6]))
-
-    table = []
-
-    columns = build_alarm_table_header_lines(cols=cols)
-    rows = build_alarm_table_rows(alarms=alarms)
-
-    table.extend(columns)
-    table.extend(rows)
-
-    return table
+    return _build_alarm_table(alarms=alarms, cols=cols)
