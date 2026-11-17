@@ -1,14 +1,26 @@
 import curses
 from collections.abc import Sequence
+from typing import ClassVar
 
-TITLE = "JNV (Jacobina Network Viewer) v1.14.8"
+from jnv_cli.types.colors import RGBColor
+
+TITLE = "JNV (Jacobina Network Viewer) v1.14.9"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 
 
 class TUI:
+    _MATT_BLUE_COLOR: ClassVar[RGBColor] = RGBColor(r=37, g=110, b=206)
+    _ROYAL_BLUE_COLOR: ClassVar[RGBColor] = RGBColor(r=65, g=105, b=225)
+    _CERULEAN_COLOR: ClassVar[RGBColor] = RGBColor(r=0, g=123, b=167)
+
     def __init__(self, stdscr: curses.window) -> None:
         self.stdscr = stdscr
-        curses.init_color(curses.COLOR_BLUE, 0, 0, 255)
+        curses.init_color(
+            curses.COLOR_BLUE,
+            self._ROYAL_BLUE_COLOR.r,
+            self._ROYAL_BLUE_COLOR.g,
+            self._ROYAL_BLUE_COLOR.b,
+        )
         curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLUE)
         self.stdscr.bkgd(" ", curses.color_pair(1))
 
