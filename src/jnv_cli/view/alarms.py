@@ -11,7 +11,7 @@ from jnv_cli.types.alarms import (
 )
 from jnv_cli.utils import NO_ALARM_LABEL, NONE_LABEL
 
-_COLUMN_SEPARATOR = " " * 3
+_COLUMN_SEPARATOR = " | "
 _HORIZONTAL_LINE_CHARACTER = "-"
 _FIBERHOME_PON_STATUS_RE = re.compile(pattern=r"active|inactive|power down|link loss")
 _FIBERHOME_ONU_TIME_RE = re.compile(pattern=r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}")

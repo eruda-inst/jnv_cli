@@ -131,7 +131,7 @@ class DatacomOLT:
         for alarm in alarms:
             if code in alarm:
                 alarm_parts = alarm.split()
-                gpon = alarm_parts[1]
+                gpon = alarm_parts[2]
                 gpon_parts = gpon.split("/")
                 id_raw = gpon_parts[-1]
                 id = int(id_raw)
