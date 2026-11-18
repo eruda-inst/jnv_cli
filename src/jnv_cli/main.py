@@ -186,9 +186,12 @@ def main(stdscr: curses.window) -> None:
 
                     while True:
                         # --- Command ---
+                        cmd_header, cmd_menu_labels = build_order_menu(
+                            labels=COMMANDS, column="COMMAND"
+                        )
                         idx = tui.select_menu(
                             question="Selecione o comando",
-                            options=COMMANDS,
+                            options=cmd_menu_labels,
                             back=True,
                             context=[
                                 f"OLT: {olt_label}",
@@ -196,6 +199,7 @@ def main(stdscr: curses.window) -> None:
                                 f"PON: {pon_label}",
                             ],
                             default=last_cmd_idx,
+                            header=cmd_header,
                         )
                         if idx is None:
                             break
