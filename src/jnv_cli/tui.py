@@ -4,7 +4,7 @@ from typing import ClassVar
 
 from jnv_cli.types.colors import RGBColor
 
-TITLE = "JNV (Jacobina Network Viewer) v1.15.3"
+TITLE = "JNV (Jacobina Network Viewer) v1.15.5"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 
 

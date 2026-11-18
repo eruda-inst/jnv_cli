@@ -20,7 +20,7 @@ from jnv_cli.view.alarms import (
     build_fiberhome_onu_alarm_table,
     build_fiberhome_pon_alarm_table,
 )
-from jnv_cli.view.menus import build_filter_labels, build_onu_menu
+from jnv_cli.view.menus import build_filter_labels, build_onu_menu, build_order_menu
 
 COMMANDS = ("Consultar alarmes das ONUs", "Consultar alarmes da PON")
 OLTS = {
@@ -112,11 +112,13 @@ def main(stdscr: curses.window) -> None:
 
     while True:
         # --- OLT ---
+        header, olt_menu_labels = build_order_menu(labels=olt_labels)
         idx = tui.select_menu(
             question="Selecione a OLT",
-            options=olt_labels,
+            options=olt_menu_labels,
             can_exit=False,
             default=last_olt_idx,
+            header=header,
         )
         if idx is None:
             continue

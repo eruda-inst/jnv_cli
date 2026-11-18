@@ -61,9 +61,7 @@ def _build_onu_rows(
     return columns, rows
 
 
-def _format_onu_table(
-    columns: list[str], rows: list[list[str]]
-) -> tuple[str, list[str]]:
+def _format_table(columns: list[str], rows: list[list[str]]) -> tuple[str, list[str]]:
     widths = [len(column) for column in columns]
     for row in rows:
         for i, value in enumerate(row):
@@ -87,4 +85,15 @@ def build_onu_menu(
         return "", []
 
     columns, rows = _build_onu_rows(onus)
-    return _format_onu_table(columns, rows)
+    return _format_table(columns, rows)
+
+
+def build_order_menu(
+    labels: Sequence[str], column: str = "OLT"
+) -> tuple[str, list[str]]:
+    if not labels:
+        return "", []
+
+    columns = ["ORDER", column]
+    rows = [[f"{order:03d}", label] for order, label in enumerate(labels, start=1)]
+    return _format_table(columns, rows)
