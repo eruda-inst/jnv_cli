@@ -166,12 +166,16 @@ def main(stdscr: curses.window) -> None:
 
                 while True:
                     # --- PON ---
+                    pon_header, pon_menu_labels = build_order_menu(
+                        labels=available_pons, column="PON", strip_prefix="PON "
+                    )
                     idx = tui.select_menu(
                         question="Selecione a PON",
-                        options=available_pons,
+                        options=pon_menu_labels,
                         back=True,
                         context=[f"OLT: {olt_label}", f"SLOT: {slot_label}"],
                         default=last_pon_idx,
+                        header=pon_header,
                     )
                     if idx is None:
                         break
