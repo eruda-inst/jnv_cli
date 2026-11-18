@@ -4,7 +4,7 @@ from typing import ClassVar
 
 from jnv_cli.types.colors import RGBColor
 
-TITLE = "JNV (Jacobina Network Viewer) v1.15.1"
+TITLE = "JNV (Jacobina Network Viewer) v1.15.3"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 
 
@@ -60,6 +60,7 @@ class TUI:
         context: Sequence[str] | None = None,
         can_exit: bool = True,
         default: int = 0,
+        header: str | None = None,
     ) -> int | None:
         selected = max(0, min(default, len(options) - 1))
         top = 0
@@ -88,6 +89,12 @@ class TUI:
             self.stdscr.addstr(y_question + 1, 2, instructions)
 
             y_base = y_question + 3
+
+            if header is not None:
+                self.stdscr.addstr(y_base, 4, header, curses.A_BOLD)
+                self.stdscr.addstr(y_base + 1, 4, "-" * len(header), curses.A_DIM)
+                y_base += 2
+
             visible = max(1, h - y_base - 1)
 
             if selected < top:
@@ -98,7 +105,11 @@ class TUI:
             for idx in range(top, min(top + visible, len(options))):
                 y = y_base + (idx - top)
                 attr = curses.A_REVERSE if idx == selected else curses.A_NORMAL
-                self.stdscr.addstr(y, 4, f"{idx + 1:03d} - {options[idx]} ", attr)
+                if header is not None:
+                    text = f"{options[idx]} "
+                else:
+                    text = f"{idx + 1:03d} - {options[idx]} "
+                self.stdscr.addstr(y, 4, text, attr)
 
             self.stdscr.refresh()
             key = self.stdscr.getch()

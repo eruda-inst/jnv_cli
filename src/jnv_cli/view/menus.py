@@ -3,6 +3,8 @@ from collections.abc import Sequence
 from jnv_cli.types.onu import ONUDatacom, ONUFiberhome
 from jnv_cli.utils import SERIAL_FILTER_SENTINEL
 
+_COLUMN_SEPARATOR = " | "
+
 
 def _join_values(values: list[str], separator: str = " | ") -> str:
     return separator.join(map(str, values))
@@ -41,8 +43,48 @@ def build_filter_labels(
     ]
 
 
-def build_onu_labels(onu: ONUDatacom | ONUFiberhome) -> str:
-    if isinstance(onu, ONUDatacom):
-        return _join_values(values=[onu.label, onu.serial, onu.ost, onu.name])
-    elif isinstance(onu, ONUFiberhome):
-        return _join_values(values=[onu.label, onu.serial, onu.ost, onu.status])
+def _build_onu_rows(
+    onus: Sequence[ONUDatacom | ONUFiberhome],
+) -> tuple[list[str], list[list[str]]]:
+    is_datacom = isinstance(onus[0], ONUDatacom)
+
+    if is_datacom:
+        columns = ["ORDER", "ID", "SERIAL", "OST", "NAME"]
+    else:
+        columns = ["ORDER", "ID", "SERIAL", "OST", "STATUS"]
+
+    rows: list[list[str]] = []
+    for order, onu in enumerate(onus, start=1):
+        last = onu.name if is_datacom else onu.status  # type: ignore
+        rows.append([f"{order:03d}", f"{onu.id:03d}", onu.serial, onu.ost, last])
+
+    return columns, rows
+
+
+def _format_onu_table(
+    columns: list[str], rows: list[list[str]]
+) -> tuple[str, list[str]]:
+    widths = [len(column) for column in columns]
+    for row in rows:
+        for i, value in enumerate(row):
+            widths[i] = max(widths[i], len(value))
+
+    def format_row(values: list[str]) -> str:
+        return _COLUMN_SEPARATOR.join(
+            value if i == len(values) - 1 else value.ljust(widths[i])
+            for i, value in enumerate(values)
+        )
+
+    header = format_row(columns)
+    labels = [format_row(row) for row in rows]
+    return header, labels
+
+
+def build_onu_menu(
+    onus: Sequence[ONUDatacom | ONUFiberhome],
+) -> tuple[str, list[str]]:
+    if not onus:
+        return "", []
+
+    columns, rows = _build_onu_rows(onus)
+    return _format_onu_table(columns, rows)

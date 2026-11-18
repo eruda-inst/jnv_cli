@@ -20,7 +20,7 @@ from jnv_cli.view.alarms import (
     build_fiberhome_onu_alarm_table,
     build_fiberhome_pon_alarm_table,
 )
-from jnv_cli.view.menus import build_filter_labels, build_onu_labels
+from jnv_cli.view.menus import build_filter_labels, build_onu_menu
 
 COMMANDS = ("Consultar alarmes das ONUs", "Consultar alarmes da PON")
 OLTS = {
@@ -336,9 +336,9 @@ def main(stdscr: curses.window) -> None:
                                     )
                                     continue
 
-                                filtered_onu_labels = [
-                                    build_onu_labels(onu=onu) for onu in filtered_onus
-                                ]
+                                header, filtered_onu_labels = build_onu_menu(
+                                    onus=filtered_onus
+                                )
                                 filter_ctx = ctx_base + [filter_ctx_line]
 
                                 while True:
@@ -349,6 +349,7 @@ def main(stdscr: curses.window) -> None:
                                         back=True,
                                         context=filter_ctx,
                                         default=last_onu_idx,
+                                        header=header,
                                     )
                                     if idx_onu is None:
                                         break
@@ -461,9 +462,7 @@ def main(stdscr: curses.window) -> None:
                                     )
                                     continue
 
-                                labels = [
-                                    build_onu_labels(onu=onu) for onu in filtered_onus
-                                ]
+                                header, labels = build_onu_menu(onus=filtered_onus)
                                 filter_ctx = ctx_base + [filter_ctx_line]
 
                                 while True:
@@ -476,6 +475,7 @@ def main(stdscr: curses.window) -> None:
                                         back=True,
                                         context=filter_ctx,
                                         default=last_onu_idx,
+                                        header=header,
                                     )
                                     if idx_onu is None:
                                         break
