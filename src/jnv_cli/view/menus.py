@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 
 from jnv_cli.types.onu import ONUDatacom, ONUFiberhome
-from jnv_cli.utils import SERIAL_FILTER_SENTINEL
+from jnv_cli.utils import NONE_LABEL, SERIAL_FILTER_SENTINEL
 
 _COLUMN_SEPARATOR = " | "
 
@@ -11,36 +11,25 @@ def _join_values(values: list[str], separator: str = " | ") -> str:
 
 
 def build_filter_labels(
-    count_map: dict[str, int], filters: Sequence[tuple[str | None, str]]
-) -> list[str]:
-    max_code = max(
-        (
-            len(code)
-            for code, _ in filters
-            if code not in (None, SERIAL_FILTER_SENTINEL)
-        ),
-        default=0,
-    )
-    max_label = max(
-        (
-            len(label)
-            for _, label in filters
-            if label not in (None, SERIAL_FILTER_SENTINEL)
-        ),
-        default=0,
-    )
-    return [
-        label
-        if code in (None, SERIAL_FILTER_SENTINEL)
-        else _join_values(
-            values=[
-                code.ljust(max_code),
-                label.ljust(max_label),
-                f"{count_map[code]:03d}",
-            ]
-        )
-        for code, label in filters
-    ]
+    count_map: dict[str, int],
+    filters: Sequence[tuple[str | None, str]],
+    total: int,
+) -> tuple[str, list[str]]:
+    rows: list[list[str]] = []
+    for order, (code, label) in enumerate(filters, start=1):
+        if code is None:
+            code_text = NONE_LABEL
+            count_text = f"{total:03d}"
+        elif code == SERIAL_FILTER_SENTINEL:
+            code_text = NONE_LABEL
+            count_text = NONE_LABEL
+        else:
+            code_text = code
+            count_text = f"{count_map[code]:03d}"
+        rows.append([f"{order:03d}", code_text, label, count_text])
+
+    columns = ["ORDER", "CODE", "LABEL", "COUNT"]
+    return _format_table(columns, rows)
 
 
 def _build_onu_rows(

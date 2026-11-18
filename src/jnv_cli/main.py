@@ -264,11 +264,12 @@ def main(stdscr: curses.window) -> None:
                             while True:
                                 raw_lines = selected_olt.get_alarms(pon=pon_label)
                                 pon_alarms = build_datacom_alarm_table(raw_lines)
-                                filter_labels = build_filter_labels(
+                                filter_header, filter_labels = build_filter_labels(
                                     filters=DATACOM_ALARM_FILTERS,
                                     count_map=count_alarms_by_filter(
                                         alarms=pon_alarms, filters=DATACOM_ALARM_FILTERS
                                     ),
+                                    total=len(onus),
                                 )
                                 idx_filter = tui.select_menu(
                                     question="Selecione o filtro de alarme",
@@ -276,6 +277,7 @@ def main(stdscr: curses.window) -> None:
                                     back=True,
                                     context=ctx_base,
                                     default=last_filter_idx,
+                                    header=filter_header,
                                 )
                                 if idx_filter is None:
                                     break
@@ -397,12 +399,13 @@ def main(stdscr: curses.window) -> None:
                                 pon_alarms = build_fiberhome_pon_alarm_table(
                                     raw_alarms=raw_alarms
                                 )
-                                filter_labels = build_filter_labels(
+                                filter_header, filter_labels = build_filter_labels(
                                     filters=FIBERHOME_ALARM_FILTERS,
                                     count_map=count_alarms_by_filter(
                                         alarms=pon_alarms,
                                         filters=FIBERHOME_ALARM_FILTERS,
                                     ),
+                                    total=len(onus),
                                 )
                                 idx_filter = tui.select_menu(
                                     question="Selecione o filtro de status",
@@ -410,6 +413,7 @@ def main(stdscr: curses.window) -> None:
                                     back=True,
                                     context=ctx_base,
                                     default=last_filter_idx,
+                                    header=filter_header,
                                 )
                                 if idx_filter is None:
                                     break
