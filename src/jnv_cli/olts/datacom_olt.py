@@ -66,6 +66,21 @@ DATACOM_ALARM_FILTERS = [
 ]
 
 
+def get_datacom_onu_ids_with_alarm(alarms: list[str], code: str) -> frozenset[int]:
+    onu_ids = set()
+
+    for alarm in alarms:
+        if code in alarm:
+            alarm_parts = alarm.split()
+            gpon = alarm_parts[2]
+            gpon_parts = gpon.split("/")
+            id_raw = gpon_parts[-1]
+            id = int(id_raw)
+            onu_ids.add(id)
+
+    return frozenset(onu_ids)
+
+
 class DatacomOLT:
     _ONU_RE: ClassVar[re.Pattern[str]] = re.compile(
         pattern=r"\d+/\d+/\d+\s+\d+\s+\w{12}\s+(Up|Down)\s+\w+\s{0,}\S{0,}"
@@ -123,21 +138,6 @@ class DatacomOLT:
             onus = [replace(onu, ost=onu.ost.ljust(max_ost)) for onu in onus]
 
         return onus
-
-    @classmethod
-    def get_onu_ids_with_alarm(cls, alarms: list[str], code: str) -> frozenset[int]:
-        onu_ids = set()
-
-        for alarm in alarms:
-            if code in alarm:
-                alarm_parts = alarm.split()
-                gpon = alarm_parts[2]
-                gpon_parts = gpon.split("/")
-                id_raw = gpon_parts[-1]
-                id = int(id_raw)
-                onu_ids.add(id)
-
-        return frozenset(onu_ids)
 
     def get_alarms(self, pon: str = "PON 001", onu: str | None = None) -> list[str]:
         pon_number = numberfy(value=pon)

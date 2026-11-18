@@ -5,14 +5,8 @@ SERIAL_FILTER_SENTINEL = "__SN__"
 NO_ALARM_LABEL = "(Sem alarmes)"
 
 
-def join_values(values: list[str], separator: str = " | ") -> str:
-    return separator.join(map(str, values))
-
-
 def numberfy(value: str | int) -> int:
-    if isinstance(value, int):
-        return value
-    return int(value.rsplit(" ", 1)[-1])
+    return value if isinstance(value, int) else int(value.rsplit(" ", 1)[-1])
 
 
 def count_alarms_by_filter(

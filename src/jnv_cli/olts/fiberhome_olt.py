@@ -30,6 +30,12 @@ FIBERHOME_ALARM_FILTERS = [
 ]
 
 
+def filter_fiberhome_onus_by_status(
+    onus: list[ONUFiberhome], status: str
+) -> list[ONUFiberhome]:
+    return [onu for onu in onus if onu.status == status]
+
+
 class FiberhomeOLT:
     _PON_ALARM_RE: ClassVar[re.Pattern[str]] = re.compile(
         pattern=r"SLOT\s+\d+\s+PON\s+\d+\s+ONU\s+\d+\s+status\s+:\s+\w+\s?\w+."
@@ -124,14 +130,6 @@ class FiberhomeOLT:
         onus = [replace(onu, ost=onu.ost.ljust(max_ost)) for onu in onus]
 
         return onus
-
-    @staticmethod
-    def filter_onus(
-        onus: list[ONUFiberhome], filter_code: str | None
-    ) -> list[ONUFiberhome]:
-        if filter_code is None:
-            return onus
-        return [onu for onu in onus if onu.status == filter_code]
 
     def get_pon_alarms(self, slot: str = "SLOT 001", pon: str = "PON 001") -> list[str]:
         slot_number = numberfy(value=slot)

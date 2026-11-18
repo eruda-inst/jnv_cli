@@ -1,7 +1,11 @@
 from collections.abc import Sequence
 
 from jnv_cli.types.onu import ONUDatacom, ONUFiberhome
-from jnv_cli.utils import SERIAL_FILTER_SENTINEL, join_values
+from jnv_cli.utils import SERIAL_FILTER_SENTINEL
+
+
+def _join_values(values: list[str], separator: str = " | ") -> str:
+    return separator.join(map(str, values))
 
 
 def build_filter_labels(
@@ -26,7 +30,7 @@ def build_filter_labels(
     return [
         label
         if code in (None, SERIAL_FILTER_SENTINEL)
-        else join_values(
+        else _join_values(
             values=[
                 code.ljust(max_code),
                 label.ljust(max_label),
@@ -39,6 +43,6 @@ def build_filter_labels(
 
 def build_onu_labels(onu: ONUDatacom | ONUFiberhome) -> str:
     if isinstance(onu, ONUDatacom):
-        return join_values(values=[onu.label, onu.serial, onu.ost, onu.name])
+        return _join_values(values=[onu.label, onu.serial, onu.ost, onu.name])
     elif isinstance(onu, ONUFiberhome):
-        return join_values(values=[onu.label, onu.serial, onu.ost, onu.status])
+        return _join_values(values=[onu.label, onu.serial, onu.ost, onu.status])

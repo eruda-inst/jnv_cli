@@ -2,8 +2,16 @@ import curses
 
 from jnv_cli.clients.ssh_client import SSHClient
 from jnv_cli.clients.telnet_client import TelnetClient
-from jnv_cli.olts.datacom_olt import DATACOM_ALARM_FILTERS, DatacomOLT
-from jnv_cli.olts.fiberhome_olt import FIBERHOME_ALARM_FILTERS, FiberhomeOLT
+from jnv_cli.olts.datacom_olt import (
+    DATACOM_ALARM_FILTERS,
+    DatacomOLT,
+    get_datacom_onu_ids_with_alarm,
+)
+from jnv_cli.olts.fiberhome_olt import (
+    FIBERHOME_ALARM_FILTERS,
+    FiberhomeOLT,
+    filter_fiberhome_onus_by_status,
+)
 from jnv_cli.tui import TUI
 from jnv_cli.types.olt_names import OLTNames
 from jnv_cli.utils import NO_ALARM_LABEL, SERIAL_FILTER_SENTINEL, count_alarms_by_filter
@@ -303,7 +311,7 @@ def main(stdscr: curses.window) -> None:
                                         pon_alarms_cache = build_datacom_alarm_table(
                                             raw_alarms=raw_alarms
                                         )
-                                    alarm_onu_ids = selected_olt.get_onu_ids_with_alarm(
+                                    alarm_onu_ids = get_datacom_onu_ids_with_alarm(
                                         alarms=pon_alarms_cache,
                                         code=filter_code,
                                     )
@@ -428,9 +436,9 @@ def main(stdscr: curses.window) -> None:
                                     no_result_msg = "Nenhuma ONU nesta PON."
 
                                 else:
-                                    filtered_onus = selected_olt.filter_onus(
-                                        onus=onus,  # type: ignore[arg-type]
-                                        filter_code=filter_code,
+                                    filtered_onus = filter_fiberhome_onus_by_status(
+                                        onus=onus,  # type: ignore
+                                        status=filter_code,
                                     )
                                     title_filter = filter_code
                                     filter_ctx_line = f"Filtro: {filter_label}"
