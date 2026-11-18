@@ -89,11 +89,17 @@ def build_onu_menu(
 
 
 def build_order_menu(
-    labels: Sequence[str], column: str = "OLT"
+    labels: Sequence[str],
+    column: str = "OLT",
+    strip_prefix: str | None = None,
 ) -> tuple[str, list[str]]:
     if not labels:
         return "", []
 
     columns = ["ORDER", column]
-    rows = [[f"{order:03d}", label] for order, label in enumerate(labels, start=1)]
+    rows: list[list[str]] = []
+    for order, label in enumerate(labels, start=1):
+        display = label.removeprefix(strip_prefix) if strip_prefix else label
+        rows.append([f"{order:03d}", display])
+
     return _format_table(columns, rows)

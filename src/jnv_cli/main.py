@@ -143,12 +143,16 @@ def main(stdscr: curses.window) -> None:
                 if single_slot:
                     slot_label = slots[0]
                 else:
+                    slot_header, slot_menu_labels = build_order_menu(
+                        labels=slots, column="SLOT", strip_prefix="SLOT "
+                    )
                     idx = tui.select_menu(
                         question="Selecione o SLOT",
-                        options=slots,
+                        options=slot_menu_labels,
                         back=True,
                         context=[f"OLT: {olt_label}"],
                         default=last_slot_idx,
+                        header=slot_header,
                     )
                     if idx is None:
                         break
