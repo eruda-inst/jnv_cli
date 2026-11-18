@@ -1,3 +1,4 @@
+import re
 from collections.abc import Sequence
 
 NONE_LABEL = "---"
@@ -13,14 +14,10 @@ def count_alarms_by_filter(
     alarms: Sequence[str], filters: Sequence[tuple[str | None, str]]
 ) -> dict[str, int]:
     codes = [code for code, _ in filters if code not in (None, SERIAL_FILTER_SENTINEL)]
-    raw_lines = alarms
     count_map = {}
 
     for code in codes:
-        count_map[code] = 0
-        for raw_line in raw_lines:
-            line = raw_line.strip()
-            if code in line:
-                count_map[code] = count_map[code] + 1
+        pattern = re.compile(rf"\b{re.escape(code)}\b")
+        count_map[code] = sum(1 for line in alarms if pattern.search(line))
 
     return count_map
