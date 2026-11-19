@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from typing import cast
 
 from jnv_cli.types.onu import ONUDatacom, ONUFiberhome
 from jnv_cli.utils import NONE_LABEL, SERIAL_FILTER_SENTINEL
@@ -31,17 +32,20 @@ def build_filter_labels(
 def _build_onu_rows(
     onus: Sequence[ONUDatacom | ONUFiberhome],
 ) -> tuple[list[str], list[list[str]]]:
-    is_datacom = isinstance(onus[0], ONUDatacom)
-
-    if is_datacom:
+    if onus and isinstance(onus[0], ONUDatacom):
+        datacom_onus = cast(Sequence[ONUDatacom], onus)
         columns = ["ORDER", "ID", "SERIAL", "OST", "NAME"]
+        rows = [
+            [f"{order:03d}", f"{onu.id:03d}", onu.serial, onu.ost, onu.name]
+            for order, onu in enumerate(datacom_onus, start=1)
+        ]
     else:
+        fiberhome_onus = cast(Sequence[ONUFiberhome], onus)
         columns = ["ORDER", "ID", "SERIAL", "OST", "STATUS"]
-
-    rows: list[list[str]] = []
-    for order, onu in enumerate(onus, start=1):
-        last = onu.name if is_datacom else onu.status  # type: ignore
-        rows.append([f"{order:03d}", f"{onu.id:03d}", onu.serial, onu.ost, last])
+        rows = [
+            [f"{order:03d}", f"{onu.id:03d}", onu.serial, onu.ost, onu.status]
+            for order, onu in enumerate(fiberhome_onus, start=1)
+        ]
 
     return columns, rows
 

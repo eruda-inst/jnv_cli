@@ -1,4 +1,5 @@
 import curses
+from typing import cast
 
 from jnv_cli.clients.ssh_client import SSHClient
 from jnv_cli.clients.telnet_client import TelnetClient
@@ -14,6 +15,7 @@ from jnv_cli.olts.fiberhome_olt import (
 )
 from jnv_cli.tui import TUI
 from jnv_cli.types.olt import OLTNames
+from jnv_cli.types.onu import ONUDatacom, ONUFiberhome
 from jnv_cli.utils import NO_ALARM_LABEL, SERIAL_FILTER_SENTINEL, count_alarms_by_filter
 from jnv_cli.view.alarms import (
     build_datacom_alarm_table,
@@ -252,6 +254,7 @@ def main(stdscr: curses.window) -> None:
                             continue
 
                         if isinstance(selected_olt, DatacomOLT):
+                            datacom_onus = cast(list[ONUDatacom], onus)
                             pon_alarms_cache: list[str] | None = None
 
                             while True:
@@ -293,8 +296,8 @@ def main(stdscr: curses.window) -> None:
                                     serial_query = serial_text.lower()
                                     filtered_onus = [
                                         o
-                                        for o in onus
-                                        if serial_query in o.serial.lower()  # type: ignore
+                                        for o in datacom_onus
+                                        if serial_query in o.serial.lower()
                                     ]
                                     title_filter = f'Serial "{serial_text}"'
                                     filter_ctx_line = f'Serial: "{serial_text}"'
@@ -302,7 +305,7 @@ def main(stdscr: curses.window) -> None:
                                     no_result_msg = f"Nenhuma ONU nesta PON com serial contendo '{serial_text}'."
 
                                 elif filter_code is None:
-                                    filtered_onus = onus
+                                    filtered_onus = datacom_onus
                                     title_filter = None
                                     filter_ctx_line = f"Filtro: {filter_label}"
                                     onu_question_suffix = filter_label
@@ -384,6 +387,8 @@ def main(stdscr: curses.window) -> None:
                                     )
 
                         elif isinstance(selected_olt, FiberhomeOLT):
+                            fiberhome_onus = cast(list[ONUFiberhome], onus)
+
                             while True:
                                 raw_alarms = selected_olt.get_pon_alarms(
                                     pon=pon_label, slot=slot_label
@@ -428,8 +433,8 @@ def main(stdscr: curses.window) -> None:
                                     serial_query = serial_text.lower()
                                     filtered_onus = [
                                         o
-                                        for o in onus
-                                        if serial_query in o.serial.lower()  # type: ignore
+                                        for o in fiberhome_onus
+                                        if serial_query in o.serial.lower()
                                     ]
                                     title_filter = f'Serial "{serial_text}"'
                                     filter_ctx_line = f'Serial: "{serial_text}"'
@@ -440,7 +445,7 @@ def main(stdscr: curses.window) -> None:
                                     )
 
                                 elif filter_code is None:
-                                    filtered_onus = onus
+                                    filtered_onus = fiberhome_onus
                                     title_filter = None
                                     filter_ctx_line = f"Filtro: {filter_label}"
                                     onu_question_suffix = filter_label
@@ -448,7 +453,7 @@ def main(stdscr: curses.window) -> None:
 
                                 else:
                                     filtered_onus = filter_fiberhome_onus_by_status(
-                                        onus=onus,  # type: ignore
+                                        onus=fiberhome_onus,
                                         status=filter_code,
                                     )
                                     title_filter = filter_code
