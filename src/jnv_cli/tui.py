@@ -1,10 +1,12 @@
 import curses
 from collections.abc import Sequence
+from string import ascii_letters, digits
 from typing import ClassVar
 
 from jnv_cli.types.colors import RGBColor
+from jnv_cli.types.keys import Keys
 
-TITLE = "JNV (Jacobina Network Viewer) v1.16.3"
+TITLE = "JNV (Jacobina Network Viewer) v1.16.4"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 
 
@@ -12,6 +14,35 @@ class TUI:
     _MATT_BLUE_COLOR: ClassVar[RGBColor] = RGBColor(r=37, g=110, b=206)
     _ROYAL_BLUE_COLOR: ClassVar[RGBColor] = RGBColor(r=65, g=105, b=225)
     _CERULEAN_COLOR: ClassVar[RGBColor] = RGBColor(r=0, g=123, b=167)
+
+    _CONFIRM_KEYS: ClassVar[tuple[Keys, ...]] = (
+        Keys.KEY_ENTER,
+        Keys.KEY_CTRL_LF,
+        Keys.KEY_CTRL_CR,
+    )
+    _CANCEL_KEYS: ClassVar[tuple[Keys, ...]] = (
+        Keys.KEY_LOWER_Q,
+        Keys.KEY_UPPER_Q,
+        Keys.KEY_CTRL_ESC,
+    )
+    _NAV_UP_KEYS: ClassVar[tuple[Keys, ...]] = (
+        Keys.KEY_UP,
+        Keys.KEY_LOWER_K,
+        Keys.KEY_UPPER_K,
+    )
+    _NAV_DOWN_KEYS: ClassVar[tuple[Keys, ...]] = (
+        Keys.KEY_DOWN,
+        Keys.KEY_LOWER_J,
+        Keys.KEY_UPPER_J,
+    )
+    _ERASE_KEYS: ClassVar[tuple[Keys, ...]] = (
+        Keys.KEY_BACKSPACE,
+        Keys.KEY_CTRL_BACKSPACE,
+    )
+    _DIGIT_KEYS: ClassVar[tuple[int, ...]] = tuple([ord(c) for c in digits])
+    _SERIAL_KEYS: ClassVar[tuple[int, ...]] = tuple(
+        [ord(c) for c in (ascii_letters + digits)]
+    )
 
     def __init__(self, stdscr: curses.window) -> None:
         self.stdscr = stdscr
@@ -64,12 +95,12 @@ class TUI:
     ) -> int | None:
         selected = max(0, min(default, len(options) - 1))
         top = 0
-        hints = ["↑/↓ navegar", "Enter selecionar"]
+        hints = ["↑/↓, k/j ou 1-9 para navegar", "Enter para selecionar"]
 
         if back:
-            hints.append("q voltar")
+            hints.append("q/Q/Esc para voltar")
         elif can_exit:
-            hints.append("q sair")
+            hints.append("q/Q/Esc para sair")
         instructions = "(" + ", ".join(hints) + ")"
 
         while True:
@@ -114,18 +145,18 @@ class TUI:
             self.stdscr.refresh()
             key = self.stdscr.getch()
 
-            if key in (ord("q"), ord("Q"), 27):
+            if key in self._CANCEL_KEYS:
                 if back or can_exit:
                     return None
                 continue
-            elif key in (curses.KEY_UP, ord("k")):
+            elif key in self._NAV_UP_KEYS:
                 selected = (selected - 1) % len(options)
-            elif key in (curses.KEY_DOWN, ord("j")):
+            elif key in self._NAV_DOWN_KEYS:
                 selected = (selected + 1) % len(options)
-            elif key in (10, 13, curses.KEY_ENTER):
+            elif key in self._CONFIRM_KEYS:
                 return selected
-            elif ord("1") <= key <= ord("9"):
-                n = key - ord("0")
+            elif key in self._DIGIT_KEYS[1::]:
+                n = key - Keys.KEY_0
                 if n <= min(len(options), 9):
                     return n - 1
 
@@ -151,14 +182,14 @@ class TUI:
                 line_content = lines[i][: max(0, w - 6)]
                 self.stdscr.addstr(y_base + (i - top), 4, line_content)
 
-            footer = "(↑/↓ rolar, qualquer outra tecla volta)"
+            footer = "(↑/↓, k/j ou K/J para rolar, quaisquer outras teclas para voltar)"
             self.stdscr.addstr(h - 2, 2, footer[: max(0, w - 6)], curses.A_DIM)
             self.stdscr.refresh()
 
             key = self.stdscr.getch()
-            if key in (curses.KEY_UP, ord("k")):
+            if key in self._NAV_UP_KEYS:
                 top = max(0, top - 1)
-            elif key in (curses.KEY_DOWN, ord("j")):
+            elif key in self._NAV_DOWN_KEYS:
                 top = min(max_top, top + 1)
             else:
                 return
@@ -169,7 +200,7 @@ class TUI:
         context: Sequence[str] | None = None,
     ) -> str | None:
         buffer: list[str] = []
-        instructions = "(Enter confirmar, q cancelar)"
+        instructions = "(Enter para confirmar, q/Q/Esc para cancelar)"
 
         while True:
             _, w = self._prepare_screen()
@@ -193,15 +224,15 @@ class TUI:
 
             key = self.stdscr.getch()
 
-            if key == 27:  # Esc
+            if key == Keys.KEY_CTRL_ESC:
                 return None
-            if key in (10, 13, curses.KEY_ENTER):
+            if key in self._CONFIRM_KEYS:
                 return "".join(buffer)
-            if key in (curses.KEY_BACKSPACE, 8, 127):
+            if key in self._ERASE_KEYS:
                 if buffer:
                     buffer.pop()
                 continue
-            if key == ord("q") and not buffer:
+            if (key == Keys.KEY_LOWER_Q or key == Keys.KEY_UPPER_Q) and not buffer:
                 return None
-            if 32 <= key <= 126:
+            if key in self._SERIAL_KEYS:
                 buffer.append(chr(key))
