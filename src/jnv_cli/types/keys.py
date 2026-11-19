@@ -1,14 +1,15 @@
 import curses
+import curses.ascii
 from enum import IntEnum
 
 
 class Keys(IntEnum):
-    KEY_CTRL_BACKSPACE = ord("\b")
-    KEY_CTRL_CR = ord("\r")
-    KEY_CTRL_ESC = ord("\x1b")
-    KEY_CTRL_LF = ord("\n")
+    KEY_CTRL_BS = curses.ascii.BS
+    KEY_CTRL_CR = curses.ascii.CR
+    KEY_CTRL_ESC = curses.ascii.ESC
+    KEY_CTRL_LF = curses.ascii.LF
 
-    KEY_BACKSPACE = curses.KEY_BACKSPACE
+    KEY_BS = curses.KEY_BACKSPACE
     KEY_ENTER = curses.KEY_ENTER
     KEY_DOWN = curses.KEY_DOWN
     KEY_UP = curses.KEY_UP

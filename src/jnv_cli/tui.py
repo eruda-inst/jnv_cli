@@ -6,7 +6,7 @@ from typing import ClassVar
 from jnv_cli.types.colors import RGBColor
 from jnv_cli.types.keys import Keys
 
-TITLE = "JNV (Jacobina Network Viewer) v1.16.7"
+TITLE = "JNV (Jacobina Network Viewer) v1.16.8"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 
 
@@ -35,10 +35,7 @@ class TUI:
         Keys.KEY_LOWER_J,
         Keys.KEY_UPPER_J,
     )
-    _ERASE_KEYS: ClassVar[tuple[Keys, ...]] = (
-        Keys.KEY_BACKSPACE,
-        Keys.KEY_CTRL_BACKSPACE,
-    )
+    _ERASE_KEYS: ClassVar[tuple[Keys, ...]] = (Keys.KEY_BS, Keys.KEY_CTRL_BS)
     _DIGIT_KEYS: ClassVar[tuple[int, ...]] = tuple([ord(c) for c in digits])
     _SERIAL_KEYS: ClassVar[tuple[int, ...]] = tuple(
         [ord(c) for c in (ascii_letters + digits)]
