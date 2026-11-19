@@ -6,7 +6,7 @@ from typing import ClassVar
 from jnv_cli.types.colors import RGBColor
 from jnv_cli.types.keys import Keys
 
-TITLE = "JNV (Jacobina Network Viewer) v1.16.4"
+TITLE = "JNV (Jacobina Network Viewer) v1.16.5"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 
 
@@ -95,7 +95,7 @@ class TUI:
     ) -> int | None:
         selected = max(0, min(default, len(options) - 1))
         top = 0
-        hints = ["↑/↓, k/j ou 1-9 para navegar", "Enter para selecionar"]
+        hints = ["↑/↓, k/j, K/J ou 1-9 para navegar", "Enter para selecionar"]
 
         if back:
             hints.append("q/Q/Esc para voltar")
