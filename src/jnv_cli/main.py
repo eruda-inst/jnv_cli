@@ -13,7 +13,7 @@ from jnv_cli.olts.fiberhome_olt import (
     filter_fiberhome_onus_by_status,
 )
 from jnv_cli.tui import TUI
-from jnv_cli.types.olt_names import OLTNames
+from jnv_cli.types.olt import OLTNames
 from jnv_cli.utils import NO_ALARM_LABEL, SERIAL_FILTER_SENTINEL, count_alarms_by_filter
 from jnv_cli.view.alarms import (
     build_datacom_alarm_table,
@@ -111,7 +111,6 @@ def main(stdscr: curses.window) -> None:
     last_onu_idx = 0
 
     while True:
-        # --- OLT ---
         header, olt_menu_labels = build_order_menu(labels=olt_labels)
         idx = tui.select_menu(
             question="Selecione a OLT",
@@ -139,7 +138,6 @@ def main(stdscr: curses.window) -> None:
             single_slot = len(slots) == 1
 
             while True:
-                # --- SLOT ---
                 if single_slot:
                     slot_label = slots[0]
                 else:
@@ -165,7 +163,6 @@ def main(stdscr: curses.window) -> None:
                 available_pons = OLT_PONS[olt_label][slot_label]
 
                 while True:
-                    # --- PON ---
                     pon_header, pon_menu_labels = build_order_menu(
                         labels=available_pons, column="PON", strip_prefix="PON "
                     )
@@ -185,7 +182,6 @@ def main(stdscr: curses.window) -> None:
                     pon_label = available_pons[idx]
 
                     while True:
-                        # --- Command ---
                         cmd_header, cmd_menu_labels = build_order_menu(
                             labels=COMMANDS, column="COMMAND"
                         )
@@ -213,7 +209,6 @@ def main(stdscr: curses.window) -> None:
                             f"Comando: {command_label}",
                         ]
 
-                        # --- PON alarms ---
                         if command_label == "Consultar alarmes da PON":
                             tui.show_loading(context=ctx_base)
                             if isinstance(selected_olt, FiberhomeOLT):
@@ -237,9 +232,7 @@ def main(stdscr: curses.window) -> None:
                             )
                             continue
 
-                        # --- ONU alarms ---
                         if command_label != "Consultar alarmes das ONUs":
-                            # Comando desconhecido: ignora
                             continue
 
                         tui.show_loading(context=ctx_base)
@@ -358,7 +351,6 @@ def main(stdscr: curses.window) -> None:
                                 filter_ctx = ctx_base + [filter_ctx_line]
 
                                 while True:
-                                    # --- ONU (Datacom) ---
                                     idx_onu = tui.select_menu(
                                         question=f"Selecione a ONU — {onu_question_suffix}",
                                         options=filtered_onu_labels,
@@ -484,7 +476,6 @@ def main(stdscr: curses.window) -> None:
                                 filter_ctx = ctx_base + [filter_ctx_line]
 
                                 while True:
-                                    # --- ONU (Fiberhome) ---
                                     idx_onu = tui.select_menu(
                                         question=(
                                             f"Selecione a ONU — {onu_question_suffix}"

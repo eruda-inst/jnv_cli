@@ -4,7 +4,7 @@ from typing import ClassVar
 
 from jnv_cli.clients.ssh_client import SSHClient
 from jnv_cli.config import settings
-from jnv_cli.types.olt_names import OLTNames
+from jnv_cli.types.olt import OLTNames
 from jnv_cli.types.onu import ONUDatacom
 from jnv_cli.utils import NONE_LABEL, SERIAL_FILTER_SENTINEL, numberfy
 

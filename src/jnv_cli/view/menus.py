@@ -6,10 +6,6 @@ from jnv_cli.utils import NONE_LABEL, SERIAL_FILTER_SENTINEL
 _COLUMN_SEPARATOR = " | "
 
 
-def _join_values(values: list[str], separator: str = " | ") -> str:
-    return separator.join(map(str, values))
-
-
 def build_filter_labels(
     count_map: dict[str, int],
     filters: Sequence[tuple[str | None, str]],
