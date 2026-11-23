@@ -394,6 +394,50 @@ def main(stdscr: curses.window) -> None:
                                 )
                                 filter_ctx = ctx_base + [filter_ctx_line]
 
+                                def _refresh_onu_menu(
+                                    _olt: DatacomOLT = selected_olt,
+                                    _pon: str = pon_label,
+                                    _filter_code: str | None = filter_code,
+                                ) -> tuple[list[str], str]:
+                                    nonlocal \
+                                        onus, \
+                                        datacom_onus, \
+                                        pon_alarms_cache, \
+                                        filtered_onus, \
+                                        header, \
+                                        filtered_onu_labels
+                                    onus = _olt.get_onus(pon=_pon)
+                                    datacom_onus = cast(list[ONUDatacom], onus)
+                                    pon_alarms_cache = None
+
+                                    if _filter_code == SERIAL_FILTER_SENTINEL:
+                                        filtered_onus = [
+                                            o
+                                            for o in datacom_onus
+                                            if serial_query in o.serial.lower()
+                                        ]
+                                    elif _filter_code is None:
+                                        filtered_onus = datacom_onus
+                                    else:
+                                        raw_alarms = _olt.get_alarms(pon=_pon)
+                                        pon_alarms_cache = build_datacom_alarm_table(
+                                            raw_alarms=raw_alarms
+                                        )
+                                        alarm_onu_ids = get_datacom_onu_ids_with_alarm(
+                                            alarms=pon_alarms_cache,
+                                            code=_filter_code,
+                                        )
+                                        filtered_onus = [
+                                            o
+                                            for o in datacom_onus
+                                            if o.id in alarm_onu_ids
+                                        ]
+
+                                    header, filtered_onu_labels = build_onu_menu(
+                                        onus=filtered_onus
+                                    )
+                                    return filtered_onu_labels, header
+
                                 while True:
                                     idx_onu = tui.select_menu(
                                         question=f"Selecione a ONU — {onu_question_suffix}",
@@ -402,6 +446,8 @@ def main(stdscr: curses.window) -> None:
                                         context=filter_ctx,
                                         default=last_onu_idx,
                                         header=header,
+                                        refresh=_refresh_onu_menu,
+                                        empty_message=no_result_msg,
                                     )
                                     if idx_onu is None:
                                         break
