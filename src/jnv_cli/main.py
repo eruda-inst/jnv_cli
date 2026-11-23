@@ -573,6 +573,7 @@ def main(stdscr: curses.window) -> None:
                                     last_onu_idx = idx_onu
 
                                     onu = filtered_onus[idx_onu]
+                                    onu_ctx = filter_ctx + [f"ONU: {onu.label}"]
                                     tui.show_loading(
                                         context=filter_ctx + [f"ONU: {onu.label}"]
                                     )
@@ -584,6 +585,22 @@ def main(stdscr: curses.window) -> None:
                                     alarms = build_fiberhome_onu_alarm_table(
                                         raw_alarms=raw_alarms
                                     )
+
+                                    def _refresh_onu_alarms(
+                                        _olt: FiberhomeOLT = selected_olt,
+                                        _slot: str = slot_label,
+                                        _pon: str = pon_label,
+                                        _onu_id: int = onu.id,
+                                    ) -> list[str]:
+                                        raw = _olt.get_onu_alarms(
+                                            slot=_slot,
+                                            pon=_pon,
+                                            onu=_onu_id,
+                                        )
+                                        return build_fiberhome_onu_alarm_table(
+                                            raw_alarms=raw
+                                        )
+
                                     tui.show_result(
                                         title=(
                                             f"{command_label} — {olt_label} / "
@@ -591,6 +608,8 @@ def main(stdscr: curses.window) -> None:
                                             f"{onu.label}"
                                         ),
                                         lines=alarms,
+                                        context=onu_ctx,
+                                        refresh=_refresh_onu_alarms,
                                     )
 
                         continue

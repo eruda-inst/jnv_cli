@@ -6,7 +6,7 @@ from typing import ClassVar
 from jnv_cli.types.colors import RGBColor
 from jnv_cli.types.keys import Keys
 
-TITLE = "JNV (Jacobina Network Viewer) v1.17.1"
+TITLE = "JNV (Jacobina Network Viewer) v1.17.3"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 
 
@@ -192,8 +192,20 @@ class TUI:
                 if n <= min(len(options), 9):
                     return n - 1
 
-    def show_result(self, title: str, lines: Sequence[str]) -> None:
+    def show_result(
+        self,
+        title: str,
+        lines: Sequence[str],
+        context: Sequence[str] | None = None,
+        refresh: Callable[[], Sequence[str]] | None = None,
+    ) -> None:
         top = 0
+        footer_hints = ["↑/↓, k/j ou K/J para rolar"]
+        if refresh is not None:
+            footer_hints.append("r/R para atualizar")
+        footer_hints.append("q/Q/Esc para voltar")
+        footer = "(" + ", ".join(footer_hints) + ")"
+
         while True:
             h, w = self._prepare_screen()
 
@@ -203,28 +215,37 @@ class TUI:
             )
             self.stdscr.addstr(4, 2, title[: max(0, w - 4)])
 
+            clean_lines = [l.strip() for l in lines if l]
             y_base = 6
             visible = max(1, h - y_base - 3)
-            max_top = max(0, len(lines) - visible)
+            max_top = max(0, len(clean_lines) - visible)
             top = min(top, max_top)
 
-            lines = [l.strip() for l in lines if l]
-
-            for i in range(top, min(top + visible, len(lines))):
-                line_content = lines[i][: max(0, w - 6)]
+            for i in range(top, min(top + visible, len(clean_lines))):
+                line_content = clean_lines[i][: max(0, w - 6)]
                 self.stdscr.addstr(y_base + (i - top), 4, line_content)
 
-            footer = "(↑/↓, k/j ou K/J para rolar, quaisquer outras teclas para voltar)"
             self.stdscr.addstr(h - 2, 2, footer[: max(0, w - 6)], curses.A_DIM)
             self.stdscr.refresh()
 
             key = self.stdscr.getch()
-            if key in self._NAV_UP_KEYS:
+            if key in self._CANCEL_KEYS:
+                return
+            elif refresh is not None and key in self._REFRESH_KEYS:
+                refresh_context: list[str] = []
+                if context:
+                    refresh_context.extend(context)
+                else:
+                    refresh_context.append(title)
+                refresh_context.append("Atualizando...")
+                self.show_loading(context=refresh_context)
+
+                lines = refresh()
+                top = 0
+            elif key in self._NAV_UP_KEYS:
                 top = max(0, top - 1)
             elif key in self._NAV_DOWN_KEYS:
                 top = min(max_top, top + 1)
-            else:
-                return
 
     def ask_input(
         self,
