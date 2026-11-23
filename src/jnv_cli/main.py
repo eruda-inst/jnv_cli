@@ -409,6 +409,28 @@ def main(stdscr: curses.window) -> None:
                         elif isinstance(selected_olt, FiberhomeOLT):
                             fiberhome_onus = cast(list[ONUFiberhome], onus)
 
+                            def _refresh_filter_menu(
+                                _olt: FiberhomeOLT = selected_olt,
+                                _slot: str = slot_label,
+                                _pon: str = pon_label,
+                            ) -> tuple[list[str], str]:
+                                nonlocal onus, fiberhome_onus
+                                onus = _olt.get_onus(slot=_slot, pon=_pon)
+                                fiberhome_onus = cast(list[ONUFiberhome], onus)
+                                raw_alarms = _olt.get_pon_alarms(slot=_slot, pon=_pon)
+                                pon_alarms = build_fiberhome_pon_alarm_table(
+                                    raw_alarms=raw_alarms
+                                )
+                                header, labels = build_filter_labels(
+                                    filters=FIBERHOME_ALARM_FILTERS,
+                                    count_map=count_alarms_by_filter(
+                                        alarms=pon_alarms,
+                                        filters=FIBERHOME_ALARM_FILTERS,
+                                    ),
+                                    total=len(onus),
+                                )
+                                return labels, header
+
                             while True:
                                 raw_alarms = selected_olt.get_pon_alarms(
                                     pon=pon_label, slot=slot_label
@@ -431,6 +453,7 @@ def main(stdscr: curses.window) -> None:
                                     context=ctx_base,
                                     default=last_filter_idx,
                                     header=filter_header,
+                                    refresh=_refresh_filter_menu,
                                 )
                                 if idx_filter is None:
                                     break
