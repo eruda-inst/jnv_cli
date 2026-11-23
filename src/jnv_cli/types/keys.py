@@ -20,5 +20,7 @@ class Keys(IntEnum):
     KEY_UPPER_K = ord("K")
     KEY_LOWER_Q = ord("q")
     KEY_UPPER_Q = ord("Q")
+    KEY_LOWER_R = ord("r")
+    KEY_UPPER_R = ord("R")
 
     KEY_0 = ord("0")

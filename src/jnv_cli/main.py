@@ -257,6 +257,25 @@ def main(stdscr: curses.window) -> None:
                             datacom_onus = cast(list[ONUDatacom], onus)
                             pon_alarms_cache: list[str] | None = None
 
+                            def _refresh_filter_menu(
+                                _olt: DatacomOLT = selected_olt,
+                                _pon: str = pon_label,
+                                _onus: list[ONUDatacom] = datacom_onus,
+                            ) -> tuple[list[str], str]:
+                                nonlocal pon_alarms_cache
+                                pon_alarms_cache = None
+                                raw_lines = _olt.get_alarms(pon=_pon)
+                                pon_alarms = build_datacom_alarm_table(raw_lines)
+                                header, labels = build_filter_labels(
+                                    filters=DATACOM_ALARM_FILTERS,
+                                    count_map=count_alarms_by_filter(
+                                        alarms=pon_alarms,
+                                        filters=DATACOM_ALARM_FILTERS,
+                                    ),
+                                    total=len(_onus),
+                                )
+                                return labels, header
+
                             while True:
                                 raw_lines = selected_olt.get_alarms(pon=pon_label)
                                 pon_alarms = build_datacom_alarm_table(raw_lines)
@@ -274,6 +293,7 @@ def main(stdscr: curses.window) -> None:
                                     context=ctx_base,
                                     default=last_filter_idx,
                                     header=filter_header,
+                                    refresh=_refresh_filter_menu,
                                 )
                                 if idx_filter is None:
                                     break

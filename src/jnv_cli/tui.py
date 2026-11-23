@@ -1,12 +1,12 @@
 import curses
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from string import ascii_letters, digits
 from typing import ClassVar
 
 from jnv_cli.types.colors import RGBColor
 from jnv_cli.types.keys import Keys
 
-TITLE = "JNV (Jacobina Network Viewer) v1.16.8"
+TITLE = "JNV (Jacobina Network Viewer) v1.16.9"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 
 
@@ -34,6 +34,10 @@ class TUI:
         Keys.KEY_DOWN,
         Keys.KEY_LOWER_J,
         Keys.KEY_UPPER_J,
+    )
+    _REFRESH_KEYS: ClassVar[tuple[Keys, ...]] = (
+        Keys.KEY_LOWER_R,
+        Keys.KEY_UPPER_R,
     )
     _ERASE_KEYS: ClassVar[tuple[Keys, ...]] = (Keys.KEY_BS, Keys.KEY_CTRL_BS)
     _DIGIT_KEYS: ClassVar[tuple[int, ...]] = tuple([ord(c) for c in digits])
@@ -89,11 +93,14 @@ class TUI:
         can_exit: bool = True,
         default: int = 0,
         header: str | None = None,
+        refresh: Callable[[], tuple[Sequence[str], str | None]] | None = None,
     ) -> int | None:
         selected = max(0, min(default, len(options) - 1))
         top = 0
         hints = ["↑/↓, k/j, K/J ou 1-9 para navegar", "Enter para selecionar"]
 
+        if refresh is not None:
+            hints.append("r/R para atualizar")
         if back:
             hints.append("q/Q/Esc para voltar")
         elif can_exit:
@@ -145,6 +152,18 @@ class TUI:
             if key in self._CANCEL_KEYS:
                 if back or can_exit:
                     return None
+                continue
+            elif refresh is not None and key in self._REFRESH_KEYS:
+                refresh_context: list[str] = []
+                if context:
+                    refresh_context.extend(context)
+                refresh_context.append("Atualizando...")
+                self.show_loading(context=refresh_context)
+
+                options, new_header = refresh()
+                if new_header is not None:
+                    header = new_header
+                selected = max(0, min(selected, len(options) - 1))
                 continue
             elif key in self._NAV_UP_KEYS:
                 selected = (selected - 1) % len(options)
