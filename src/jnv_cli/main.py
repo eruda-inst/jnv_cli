@@ -220,18 +220,39 @@ def main(stdscr: curses.window) -> None:
                                 alarms = build_fiberhome_pon_alarm_table(
                                     raw_alarms=raw_alarms
                                 )
+
+                                def _refresh_pon_alarms(
+                                    _olt: FiberhomeOLT = selected_olt,
+                                    _slot: str = slot_label,
+                                    _pon: str = pon_label,
+                                ) -> list[str]:
+                                    raw = _olt.get_pon_alarms(slot=_slot, pon=_pon)
+                                    return build_fiberhome_pon_alarm_table(
+                                        raw_alarms=raw
+                                    )
+
+                                tui.show_result(
+                                    title=(
+                                        f"{command_label} — {olt_label} / "
+                                        f"{slot_label} / {pon_label}"
+                                    ),
+                                    lines=alarms,
+                                    context=ctx_base,
+                                    refresh=_refresh_pon_alarms,
+                                )
                             else:
                                 raw_alarms = selected_olt.get_alarms(pon=pon_label)
                                 alarms = build_datacom_alarm_table(
                                     raw_alarms=raw_alarms
                                 )
-                            tui.show_result(
-                                title=(
-                                    f"{command_label} — {olt_label} / "
-                                    f"{slot_label} / {pon_label}"
-                                ),
-                                lines=alarms,
-                            )
+                                tui.show_result(
+                                    title=(
+                                        f"{command_label} — {olt_label} / "
+                                        f"{slot_label} / {pon_label}"
+                                    ),
+                                    lines=alarms,
+                                    context=ctx_base,
+                                )
                             continue
 
                         if command_label != "Consultar alarmes das ONUs":
