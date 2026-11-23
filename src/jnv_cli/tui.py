@@ -6,7 +6,7 @@ from typing import ClassVar
 from jnv_cli.types.colors import RGBColor
 from jnv_cli.types.keys import Keys
 
-TITLE = "JNV (Jacobina Network Viewer) v1.17.8"
+TITLE = "JNV (Jacobina Network Viewer) v1.17.9"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 
 
@@ -47,12 +47,13 @@ class TUI:
 
     def __init__(self, stdscr: curses.window) -> None:
         self.stdscr = stdscr
-        curses.init_color(
-            curses.COLOR_BLUE,
-            self._ROYAL_BLUE_COLOR.r,
-            self._ROYAL_BLUE_COLOR.g,
-            self._ROYAL_BLUE_COLOR.b,
-        )
+        if curses.can_change_color:
+            curses.init_color(
+                curses.COLOR_BLUE,
+                self._ROYAL_BLUE_COLOR.r,
+                self._ROYAL_BLUE_COLOR.g,
+                self._ROYAL_BLUE_COLOR.b,
+            )
         curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLUE)
         self.stdscr.bkgd(" ", curses.color_pair(1))
 
