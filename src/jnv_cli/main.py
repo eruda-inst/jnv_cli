@@ -245,6 +245,14 @@ def main(stdscr: curses.window) -> None:
                                 alarms = build_datacom_alarm_table(
                                     raw_alarms=raw_alarms
                                 )
+
+                                def _refresh_pon_alarms(
+                                    _olt: DatacomOLT = selected_olt,
+                                    _pon: str = pon_label,
+                                ) -> list[str]:
+                                    raw = _olt.get_alarms(pon=_pon)
+                                    return build_datacom_alarm_table(raw_alarms=raw)
+
                                 tui.show_result(
                                     title=(
                                         f"{command_label} — {olt_label} / "
@@ -252,6 +260,7 @@ def main(stdscr: curses.window) -> None:
                                     ),
                                     lines=alarms,
                                     context=ctx_base,
+                                    refresh=_refresh_pon_alarms,
                                 )
                             continue
 
