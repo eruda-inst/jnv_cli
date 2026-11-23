@@ -523,6 +523,38 @@ def main(stdscr: curses.window) -> None:
                                 header, labels = build_onu_menu(onus=filtered_onus)
                                 filter_ctx = ctx_base + [filter_ctx_line]
 
+                                def _refresh_onu_menu(
+                                    _olt: FiberhomeOLT = selected_olt,
+                                    _slot: str = slot_label,
+                                    _pon: str = pon_label,
+                                    _filter_code: str | None = filter_code,
+                                ) -> tuple[list[str], str]:
+                                    nonlocal \
+                                        onus, \
+                                        fiberhome_onus, \
+                                        filtered_onus, \
+                                        header, \
+                                        labels
+                                    onus = _olt.get_onus(slot=_slot, pon=_pon)
+                                    fiberhome_onus = cast(list[ONUFiberhome], onus)
+
+                                    if _filter_code == SERIAL_FILTER_SENTINEL:
+                                        filtered_onus = [
+                                            o
+                                            for o in fiberhome_onus
+                                            if serial_query in o.serial.lower()
+                                        ]
+                                    elif _filter_code is None:
+                                        filtered_onus = fiberhome_onus
+                                    else:
+                                        filtered_onus = filter_fiberhome_onus_by_status(
+                                            onus=fiberhome_onus,
+                                            status=_filter_code,
+                                        )
+
+                                    header, labels = build_onu_menu(onus=filtered_onus)
+                                    return labels, header
+
                                 while True:
                                     idx_onu = tui.select_menu(
                                         question=(
@@ -533,6 +565,8 @@ def main(stdscr: curses.window) -> None:
                                         context=filter_ctx,
                                         default=last_onu_idx,
                                         header=header,
+                                        refresh=_refresh_onu_menu,
+                                        empty_message=no_result_msg,
                                     )
                                     if idx_onu is None:
                                         break

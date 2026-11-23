@@ -6,7 +6,7 @@ from typing import ClassVar
 from jnv_cli.types.colors import RGBColor
 from jnv_cli.types.keys import Keys
 
-TITLE = "JNV (Jacobina Network Viewer) v1.17.0"
+TITLE = "JNV (Jacobina Network Viewer) v1.17.1"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 
 
@@ -94,21 +94,27 @@ class TUI:
         default: int = 0,
         header: str | None = None,
         refresh: Callable[[], tuple[Sequence[str], str | None]] | None = None,
+        no_result: Callable[[], None] | None = None,
+        empty_message: str = "Nenhum resultado encontrado.",
     ) -> int | None:
-        selected = max(0, min(default, len(options) - 1))
+        selected = max(0, min(default, len(options) - 1)) if options else 0
         top = 0
-        hints = ["↑/↓, k/j, K/J ou 1-9 para navegar", "Enter para selecionar"]
-
-        if refresh is not None:
-            hints.append("r/R para atualizar")
-        if back:
-            hints.append("q/Q/Esc para voltar")
-        elif can_exit:
-            hints.append("q/Q/Esc para sair")
-        instructions = "(" + ", ".join(hints) + ")"
 
         while True:
             h, w = self._prepare_screen()
+
+            hints: list[str] = []
+            if options:
+                hints.extend(
+                    ["↑/↓, k/j, K/J ou 1-9 para navegar", "Enter para selecionar"]
+                )
+            if refresh is not None:
+                hints.append("r/R para atualizar")
+            if back:
+                hints.append("q/Q/Esc para voltar")
+            elif can_exit:
+                hints.append("q/Q/Esc para sair")
+            instructions = "(" + ", ".join(hints) + ")"
 
             self.stdscr.addstr(1, max(0, (w - len(TITLE)) // 2), TITLE)
             self.stdscr.addstr(
@@ -125,26 +131,32 @@ class TUI:
 
             y_base = y_question + 3
 
-            if header is not None:
-                self.stdscr.addstr(y_base, 4, header, curses.A_BOLD)
-                self.stdscr.addstr(y_base + 1, 4, "-" * len(header), curses.A_DIM)
-                y_base += 2
-
-            visible = max(1, h - y_base - 1)
-
-            if selected < top:
-                top = selected
-            elif selected >= top + visible:
-                top = selected - visible + 1
-
-            for idx in range(top, min(top + visible, len(options))):
-                y = y_base + (idx - top)
-                attr = curses.A_REVERSE if idx == selected else curses.A_NORMAL
-                if header is not None:
-                    text = f"{options[idx]} "
+            if not options:
+                if no_result is not None:
+                    no_result()
                 else:
-                    text = f"{idx + 1:03d} - {options[idx]} "
-                self.stdscr.addstr(y, 4, text, attr)
+                    self.stdscr.addstr(y_base, 4, empty_message[: max(0, w - 6)])
+            else:
+                if header:
+                    self.stdscr.addstr(y_base, 4, header, curses.A_BOLD)
+                    self.stdscr.addstr(y_base + 1, 4, "-" * len(header), curses.A_DIM)
+                    y_base += 2
+
+                visible = max(1, h - y_base - 1)
+
+                if selected < top:
+                    top = selected
+                elif selected >= top + visible:
+                    top = selected - visible + 1
+
+                for idx in range(top, min(top + visible, len(options))):
+                    y = y_base + (idx - top)
+                    attr = curses.A_REVERSE if idx == selected else curses.A_NORMAL
+                    if header:
+                        text = f"{options[idx]} "
+                    else:
+                        text = f"{idx + 1:03d} - {options[idx]} "
+                    self.stdscr.addstr(y, 4, text, attr)
 
             self.stdscr.refresh()
             key = self.stdscr.getch()
@@ -163,7 +175,11 @@ class TUI:
                 options, new_header = refresh()
                 if new_header is not None:
                     header = new_header
-                selected = max(0, min(selected, len(options) - 1))
+                selected = max(0, min(selected, len(options) - 1)) if options else 0
+                if not options:
+                    top = 0
+                continue
+            elif not options:
                 continue
             elif key in self._NAV_UP_KEYS:
                 selected = (selected - 1) % len(options)
