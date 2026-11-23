@@ -221,7 +221,7 @@ def main(stdscr: curses.window) -> None:
                                     raw_alarms=raw_alarms
                                 )
 
-                                def _refresh_pon_alarms(
+                                def _refresh_fiberhome_pon_alarms(
                                     _olt: FiberhomeOLT = selected_olt,
                                     _slot: str = slot_label,
                                     _pon: str = pon_label,
@@ -238,7 +238,7 @@ def main(stdscr: curses.window) -> None:
                                     ),
                                     lines=alarms,
                                     context=ctx_base,
-                                    refresh=_refresh_pon_alarms,
+                                    refresh=_refresh_fiberhome_pon_alarms,
                                 )
                             else:
                                 raw_alarms = selected_olt.get_alarms(pon=pon_label)
@@ -287,7 +287,7 @@ def main(stdscr: curses.window) -> None:
                             datacom_onus = cast(list[ONUDatacom], onus)
                             pon_alarms_cache: list[str] | None = None
 
-                            def _refresh_filter_menu(
+                            def _refresh_datacom_filter_menu(
                                 _olt: DatacomOLT = selected_olt,
                                 _pon: str = pon_label,
                                 _onus: list[ONUDatacom] = datacom_onus,
@@ -323,7 +323,7 @@ def main(stdscr: curses.window) -> None:
                                     context=ctx_base,
                                     default=last_filter_idx,
                                     header=filter_header,
-                                    refresh=_refresh_filter_menu,
+                                    refresh=_refresh_datacom_filter_menu,
                                 )
                                 if idx_filter is None:
                                     break
@@ -335,6 +335,7 @@ def main(stdscr: curses.window) -> None:
                                     idx_filter
                                 ]
 
+                                serial_query = ""
                                 if filter_code == SERIAL_FILTER_SENTINEL:
                                     serial_input = tui.ask_input(
                                         question="Digite o serial number da ONU",
@@ -403,10 +404,11 @@ def main(stdscr: curses.window) -> None:
                                 )
                                 filter_ctx = ctx_base + [filter_ctx_line]
 
-                                def _refresh_onu_menu(
+                                def _refresh_datacom_onu_menu(
                                     _olt: DatacomOLT = selected_olt,
                                     _pon: str = pon_label,
                                     _filter_code: str | None = filter_code,
+                                    _serial_query: str = serial_query,
                                 ) -> tuple[list[str], str]:
                                     nonlocal \
                                         onus, \
@@ -423,7 +425,7 @@ def main(stdscr: curses.window) -> None:
                                         filtered_onus = [
                                             o
                                             for o in datacom_onus
-                                            if serial_query in o.serial.lower()
+                                            if _serial_query in o.serial.lower()
                                         ]
                                     elif _filter_code is None:
                                         filtered_onus = datacom_onus
@@ -455,7 +457,7 @@ def main(stdscr: curses.window) -> None:
                                         context=filter_ctx,
                                         default=last_onu_idx,
                                         header=header,
-                                        refresh=_refresh_onu_menu,
+                                        refresh=_refresh_datacom_onu_menu,
                                         empty_message=no_result_msg,
                                     )
                                     if idx_onu is None:
@@ -473,7 +475,7 @@ def main(stdscr: curses.window) -> None:
                                         raw_alarms=raw_alarms
                                     )
 
-                                    def _refresh_onu_alarms(
+                                    def _refresh_datacom_onu_alarms(
                                         _olt: DatacomOLT = selected_olt,
                                         _pon: str = pon_label,
                                         _onu_id: int = onu.id,
@@ -492,7 +494,7 @@ def main(stdscr: curses.window) -> None:
                                         ),
                                         lines=lines,
                                         context=onu_ctx,
-                                        refresh=_refresh_onu_alarms,
+                                        refresh=_refresh_datacom_onu_alarms,
                                     )
 
                         elif isinstance(selected_olt, FiberhomeOLT):
@@ -554,6 +556,7 @@ def main(stdscr: curses.window) -> None:
                                     idx_filter
                                 ]
 
+                                serial_query = ""
                                 if filter_code == SERIAL_FILTER_SENTINEL:
                                     serial_input = tui.ask_input(
                                         question="Digite o serial number da ONU",
@@ -617,6 +620,7 @@ def main(stdscr: curses.window) -> None:
                                     _slot: str = slot_label,
                                     _pon: str = pon_label,
                                     _filter_code: str | None = filter_code,
+                                    _serial_query: str = serial_query,
                                 ) -> tuple[list[str], str]:
                                     nonlocal \
                                         onus, \
@@ -631,7 +635,7 @@ def main(stdscr: curses.window) -> None:
                                         filtered_onus = [
                                             o
                                             for o in fiberhome_onus
-                                            if serial_query in o.serial.lower()
+                                            if _serial_query in o.serial.lower()
                                         ]
                                     elif _filter_code is None:
                                         filtered_onus = fiberhome_onus
