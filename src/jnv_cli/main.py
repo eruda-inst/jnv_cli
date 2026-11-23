@@ -454,9 +454,8 @@ def main(stdscr: curses.window) -> None:
                                     last_onu_idx = idx_onu
 
                                     onu = filtered_onus[idx_onu]
-                                    tui.show_loading(
-                                        context=filter_ctx + [f"ONU: {onu.label}"]
-                                    )
+                                    onu_ctx = filter_ctx + [f"ONU: {onu.label}"]
+                                    tui.show_loading(context=onu_ctx)
                                     raw_alarms = selected_olt.get_alarms(
                                         pon=pon_label,
                                         onu=str(onu.id),
@@ -464,6 +463,18 @@ def main(stdscr: curses.window) -> None:
                                     lines = build_datacom_alarm_table(
                                         raw_alarms=raw_alarms
                                     )
+
+                                    def _refresh_onu_alarms(
+                                        _olt: DatacomOLT = selected_olt,
+                                        _pon: str = pon_label,
+                                        _onu_id: int = onu.id,
+                                    ) -> list[str]:
+                                        raw = _olt.get_alarms(
+                                            pon=_pon,
+                                            onu=str(_onu_id),
+                                        )
+                                        return build_datacom_alarm_table(raw_alarms=raw)
+
                                     tui.show_result(
                                         title=(
                                             f"{command_label} — {olt_label} / "
@@ -471,6 +482,8 @@ def main(stdscr: curses.window) -> None:
                                             f"{onu.label}"
                                         ),
                                         lines=lines,
+                                        context=onu_ctx,
+                                        refresh=_refresh_onu_alarms,
                                     )
 
                         elif isinstance(selected_olt, FiberhomeOLT):
