@@ -8,7 +8,7 @@ from typing import ClassVar
 from jnv_cli.types.colors import RGBColor
 from jnv_cli.types.keys import Keys
 
-TITLE = "JNV (Jacobina Network Viewer) v1.18.0"
+TITLE = "JNV (Jacobina Network Viewer) v1.18.1"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 
 
@@ -39,22 +39,17 @@ class TUI:
         Keys.KEY_LOWER_J,
         Keys.KEY_UPPER_J,
     )
-    _REFRESH_KEYS: ClassVar[tuple[Keys, ...]] = (
-        Keys.KEY_LOWER_R,
-        Keys.KEY_UPPER_R,
-    )
+    _REFRESH_KEYS: ClassVar[tuple[Keys, ...]] = (Keys.KEY_LOWER_R, Keys.KEY_UPPER_R)
     _ERASE_KEYS: ClassVar[tuple[int, ...]] = (
         Keys.KEY_BS,
         Keys.KEY_CTRL_BS,
-        curses.ascii.DEL,
+        Keys.KEY_CTRL_DEL,
     )
     _TEXTBOX_NAV_KEYS: ClassVar[tuple[int, ...]] = (
         curses.KEY_LEFT,
         curses.KEY_RIGHT,
         curses.KEY_HOME,
         curses.KEY_END,
-        curses.ascii.SOH,  # Ctrl+A
-        curses.ascii.ENQ,  # Ctrl+E
     )
     _DIGIT_KEYS: ClassVar[tuple[int, ...]] = tuple([ord(c) for c in digits])
     _SERIAL_KEYS: ClassVar[tuple[int, ...]] = tuple(
@@ -303,33 +298,51 @@ class TUI:
         edit_win.bkgd(" ", curses.color_pair(1))
         edit_win.keypad(True)
 
-        box = curses.textpad.Textbox(edit_win, insert_mode=True)
+        chars: list[str] = []
+        cursor = 0
         cancelled = False
 
-        def _validate(key: int) -> int:
-            nonlocal cancelled
-            if key == Keys.KEY_CTRL_ESC:
-                cancelled = True
-                return curses.ascii.BEL
-            if key in self._CONFIRM_KEYS:
-                return curses.ascii.BEL
-            if key in self._ERASE_KEYS:
-                return curses.ascii.BS
-            if key in self._TEXTBOX_NAV_KEYS:
-                return key
-            if key in self._SERIAL_KEYS:
-                if len(box.gather().strip()) >= self._MAX_SERIAL_LENGTH:
-                    return 0
-                return key
-            return 0
+        def _redraw() -> None:
+            edit_win.erase()
+            text = "".join(chars)
+            if text:
+                edit_win.addstr(0, 0, text)
+            edit_win.move(0, cursor)
+            edit_win.refresh()
 
         curses.curs_set(1)
         try:
-            raw_text = box.edit(_validate)
+            _redraw()
+            while True:
+                key = edit_win.getch()
+                if key == Keys.KEY_CTRL_ESC:
+                    cancelled = True
+                    break
+                if key in self._CONFIRM_KEYS:
+                    break
+                if key == curses.KEY_LEFT:
+                    cursor = max(0, cursor - 1)
+                elif key == curses.KEY_RIGHT:
+                    cursor = min(len(chars), cursor + 1)
+                elif key in (curses.KEY_HOME,):
+                    cursor = 0
+                elif key in (curses.KEY_END,):
+                    cursor = len(chars)
+                elif key in self._ERASE_KEYS:
+                    if cursor > 0:
+                        chars.pop(cursor - 1)
+                        cursor -= 1
+                elif key == curses.KEY_DC:
+                    if cursor < len(chars):
+                        chars.pop(cursor)
+                elif key in self._SERIAL_KEYS and len(chars) < self._MAX_SERIAL_LENGTH:
+                    chars.insert(cursor, chr(key))
+                    cursor += 1
+                _redraw()
         finally:
             curses.curs_set(0)
 
         if cancelled:
             return None
 
-        return raw_text.strip()[: self._MAX_SERIAL_LENGTH]
+        return "".join(chars).strip()[: self._MAX_SERIAL_LENGTH]

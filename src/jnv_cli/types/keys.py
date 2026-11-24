@@ -8,6 +8,7 @@ class Keys(IntEnum):
     KEY_CTRL_CR = curses.ascii.CR
     KEY_CTRL_ESC = curses.ascii.ESC
     KEY_CTRL_LF = curses.ascii.LF
+    KEY_CTRL_DEL = curses.ascii.DEL
 
     KEY_BS = curses.KEY_BACKSPACE
     KEY_ENTER = curses.KEY_ENTER
