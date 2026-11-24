@@ -1,5 +1,4 @@
 import curses
-import curses.ascii
 import curses.textpad
 from collections.abc import Callable, Sequence
 from string import ascii_letters, digits
@@ -8,7 +7,7 @@ from typing import ClassVar
 from jnv_cli.types.colors import RGBColor
 from jnv_cli.types.keys import Keys
 
-TITLE = "JNV (Jacobina Network Viewer) v1.18.1"
+TITLE = "JNV (Jacobina Network Viewer) v1.18.2"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 
 
@@ -117,15 +116,13 @@ class TUI:
 
             hints: list[str] = []
             if options:
-                hints.extend(
-                    ["↑/↓, k/j, K/J ou 1-9 para navegar", "Enter para selecionar"]
-                )
+                hints.extend(["↑/↓, k/j, K/J ou 1-9 navega", "Enter seleciona"])
             if refresh is not None:
-                hints.append("r/R para atualizar")
+                hints.append("r/R atualiza")
             if back:
-                hints.append("q/Q/Esc para voltar")
+                hints.append("q/Q/Esc volta")
             elif can_exit:
-                hints.append("q/Q/Esc para sair")
+                hints.append("q/Q/Esc sai")
             instructions = "(" + ", ".join(hints) + ")"
 
             self.stdscr.addstr(1, max(0, (w - len(TITLE)) // 2), TITLE)
@@ -212,10 +209,10 @@ class TUI:
         refresh: Callable[[], Sequence[str]] | None = None,
     ) -> None:
         top = 0
-        footer_hints = ["↑/↓, k/j ou K/J para rolar"]
+        footer_hints = ["↑/↓, k/j ou K/J rola"]
         if refresh is not None:
-            footer_hints.append("r/R para atualizar")
-        footer_hints.append("q/Q/Esc para voltar")
+            footer_hints.append("r/R atualiza")
+        footer_hints.append("q/Q/Esc volta")
         footer = "(" + ", ".join(footer_hints) + ")"
 
         while True:
@@ -264,7 +261,7 @@ class TUI:
         question: str,
         context: Sequence[str] | None = None,
     ) -> str | None:
-        instructions = "(Enter para confirmar, Esc para cancelar)"
+        instructions = "(Enter confirma, ←/→ move o cursor para esquerda/direita, Home/End move o cursor para início/fim, Delete/Backspace apaga,  Esc cancela)"
         self._prepare_screen()
 
         _, w = self.stdscr.getmaxyx()
