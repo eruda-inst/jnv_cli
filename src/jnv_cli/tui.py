@@ -1,4 +1,6 @@
 import curses
+import curses.ascii
+import curses.textpad
 from collections.abc import Callable, Sequence
 from string import ascii_letters, digits
 from typing import ClassVar
@@ -6,7 +8,7 @@ from typing import ClassVar
 from jnv_cli.types.colors import RGBColor
 from jnv_cli.types.keys import Keys
 
-TITLE = "JNV (Jacobina Network Viewer) v1.17.9"
+TITLE = "JNV (Jacobina Network Viewer) v1.18.0"
 CREDITS = "Desenvolvido pelo setor de inovação da Newnet"
 
 
@@ -14,6 +16,8 @@ class TUI:
     _MATT_BLUE_COLOR: ClassVar[RGBColor] = RGBColor(r=37, g=110, b=206)
     _ROYAL_BLUE_COLOR: ClassVar[RGBColor] = RGBColor(r=65, g=105, b=225)
     _CERULEAN_COLOR: ClassVar[RGBColor] = RGBColor(r=0, g=123, b=167)
+
+    _MAX_SERIAL_LENGTH: ClassVar[int] = 12
 
     _CONFIRM_KEYS: ClassVar[tuple[Keys, ...]] = (
         Keys.KEY_ENTER,
@@ -39,7 +43,19 @@ class TUI:
         Keys.KEY_LOWER_R,
         Keys.KEY_UPPER_R,
     )
-    _ERASE_KEYS: ClassVar[tuple[Keys, ...]] = (Keys.KEY_BS, Keys.KEY_CTRL_BS)
+    _ERASE_KEYS: ClassVar[tuple[int, ...]] = (
+        Keys.KEY_BS,
+        Keys.KEY_CTRL_BS,
+        curses.ascii.DEL,
+    )
+    _TEXTBOX_NAV_KEYS: ClassVar[tuple[int, ...]] = (
+        curses.KEY_LEFT,
+        curses.KEY_RIGHT,
+        curses.KEY_HOME,
+        curses.KEY_END,
+        curses.ascii.SOH,  # Ctrl+A
+        curses.ascii.ENQ,  # Ctrl+E
+    )
     _DIGIT_KEYS: ClassVar[tuple[int, ...]] = tuple([ord(c) for c in digits])
     _SERIAL_KEYS: ClassVar[tuple[int, ...]] = tuple(
         [ord(c) for c in (ascii_letters + digits)]
@@ -253,40 +269,67 @@ class TUI:
         question: str,
         context: Sequence[str] | None = None,
     ) -> str | None:
-        buffer: list[str] = []
-        instructions = "(Enter para confirmar, q/Q/Esc para cancelar)"
+        instructions = "(Enter para confirmar, Esc para cancelar)"
+        self._prepare_screen()
 
-        while True:
-            _, w = self._prepare_screen()
+        _, w = self.stdscr.getmaxyx()
+        self.stdscr.addstr(1, max(0, (w - len(TITLE)) // 2), TITLE)
+        self.stdscr.addstr(2, max(0, (w - len(CREDITS)) // 2), CREDITS, curses.A_DIM)
 
-            self.stdscr.addstr(1, max(0, (w - len(TITLE)) // 2), TITLE)
-            self.stdscr.addstr(
-                2, max(0, (w - len(CREDITS)) // 2), CREDITS, curses.A_DIM
-            )
+        if context:
+            for i, line in enumerate(context):
+                self.stdscr.addstr(3 + i, 2, line, curses.A_DIM)
 
-            if context:
-                for i, line in enumerate(context):
-                    self.stdscr.addstr(3 + i, 2, line, curses.A_DIM)
+        y_question = 4 + (len(context) if context else 0)
+        self.stdscr.addstr(y_question, 2, question)
 
-            y_question = 4 + (len(context) if context else 0)
-            self.stdscr.addstr(y_question, 2, question)
+        box_top = y_question + 2
+        box_left = 2
+        win_y = box_top + 1
+        win_x = box_left + 1
+        win_cols = self._MAX_SERIAL_LENGTH + 1
 
-            y_input = y_question + 2
-            self.stdscr.addstr(y_input, 2, "> " + "".join(buffer))
-            self.stdscr.addstr(y_input + 1, 2, instructions, curses.A_DIM)
-            self.stdscr.refresh()
+        curses.textpad.rectangle(
+            self.stdscr,
+            box_top,
+            box_left,
+            win_y + 1,
+            win_x + win_cols,
+        )
+        self.stdscr.addstr(win_y + 2, 2, instructions, curses.A_DIM)
+        self.stdscr.refresh()
 
-            key = self.stdscr.getch()
+        edit_win = self.stdscr.derwin(1, win_cols, win_y, win_x)
+        edit_win.bkgd(" ", curses.color_pair(1))
+        edit_win.keypad(True)
 
+        box = curses.textpad.Textbox(edit_win, insert_mode=True)
+        cancelled = False
+
+        def _validate(key: int) -> int:
+            nonlocal cancelled
             if key == Keys.KEY_CTRL_ESC:
-                return None
+                cancelled = True
+                return curses.ascii.BEL
             if key in self._CONFIRM_KEYS:
-                return "".join(buffer)
+                return curses.ascii.BEL
             if key in self._ERASE_KEYS:
-                if buffer:
-                    buffer.pop()
-                continue
-            if (key == Keys.KEY_LOWER_Q or key == Keys.KEY_UPPER_Q) and not buffer:
-                return None
+                return curses.ascii.BS
+            if key in self._TEXTBOX_NAV_KEYS:
+                return key
             if key in self._SERIAL_KEYS:
-                buffer.append(chr(key))
+                if len(box.gather().strip()) >= self._MAX_SERIAL_LENGTH:
+                    return 0
+                return key
+            return 0
+
+        curses.curs_set(1)
+        try:
+            raw_text = box.edit(_validate)
+        finally:
+            curses.curs_set(0)
+
+        if cancelled:
+            return None
+
+        return raw_text.strip()[: self._MAX_SERIAL_LENGTH]
